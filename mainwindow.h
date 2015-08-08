@@ -10,6 +10,10 @@
 #define	_MAINWINDOW_H
 
 #include "ui_mainwindow.h"
+#include "org.bluez.Adapter1.h"
+#include "org.bluez.Device1.h"
+#include "org.freedesktop.DBus.ObjectManager.h"
+#include "proxies.h"
 
 class mainwindow : public QMainWindow
 {
@@ -17,8 +21,16 @@ class mainwindow : public QMainWindow
 public:
 	mainwindow();
 	virtual ~mainwindow();
+	virtual void show();
+
+private slots:
+	void onDeviceAdded(QString path, Device1 *device);
+	void onDeviceRemoved(QString path);
+	void onDeviceChanged(QString path);
+
 private:
 	Ui::mainwindow widget;
+	Proxies* proxies;
 };
 
 #endif	/* _MAINWINDOW_H */

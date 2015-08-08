@@ -7,13 +7,19 @@
  */
 
 #include <QDebug>
-#include <qt/QtWidgets/qapplication.h>
+#include <QApplication>
+#include <QDBusConnection>
+
 #include "mainwindow.h"
+#include "org.freedesktop.DBus.ObjectManager.h"
+#include "proxies.h"
 
 int main(int argc, char *argv[])
 {
 	QApplication app(argc, argv);
+
 	mainwindow mw;
 	mw.show();
+
 	return app.exec();	
 }

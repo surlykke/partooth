@@ -23,7 +23,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QTableWidget" name="pairedDevicesTable"/>
+     <widget class="QListWidget" name="pairedDevicesList"/>
     </item>
     <item>
      <widget class="QLabel" name="visibleDevicesLabel">
@@ -33,9 +33,13 @@
      </widget>
     </item>
     <item>
-     <widget class="QTableWidget" name="visibleDevicesTable"/>
+     <widget class="QListWidget" name="visibleDevicesList"/>
     </item>
    </layout>
+   <zorder>visibleDevicesList</zorder>
+   <zorder>pairedDevicesLabel</zorder>
+   <zorder>pairedDevicesList</zorder>
+   <zorder>visibleDevicesLabel</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

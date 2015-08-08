@@ -33,11 +33,9 @@
 typedef QVariantMap PropertyMap;
 typedef QMap<QString, PropertyMap> InterfaceMap;
 typedef QMap<QDBusObjectPath, InterfaceMap> ObjectMap;
-typedef QStringList InterfaceList;
 
 Q_DECLARE_METATYPE(PropertyMap)
 Q_DECLARE_METATYPE(InterfaceMap)
 Q_DECLARE_METATYPE(ObjectMap)
-Q_DECLARE_METATYPE(InterfaceList)
 
 #endif // DBUS_TYPES_H

@@ -1,5 +1,7 @@
 set(PROJECT_NAME partooth)
 cmake_minimum_required( VERSION 3.0.2 )
+set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
+
 project(${PROJECT_NAME})
 
 find_package(Qt5Widgets REQUIRED)
@@ -12,14 +14,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(SRCS
-   main.cpp
-   mainwindow.cpp
-   org.bluez.Adapter1.cpp
-   org.bluez.Device1.cpp
-   org.freedesktop.DBus.ObjectManager.cpp
-)
-
+file(GLOB SRCS *.cpp)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
