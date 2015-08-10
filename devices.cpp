@@ -7,21 +7,26 @@
  * Please refer to the LICENSE file for a copy of the license.
  */
 
-#include "proxies.h"
+
+#include "devices.h"
 #include "org.bluez.Device1.h"
 #define BLUEZ_SERVICE "org.bluez" 
 #define ADAPTER1_IF "org.bluez.Adapter1" 
 #define DEVICE1_IF "org.bluez.Device1" 
 
-Proxies::Proxies() : adapter(0), devices()
+Devices::Devices(QObject *parent) : 
+	QObject(parent),
+	objectManager(0),
+	adapter(0),
+	devices()
 {
 }
 
-Proxies::~Proxies()
+Devices::~Devices()
 {
 }
 
-void Proxies::initialize()
+void Devices::initialize()
 {
 	qDBusRegisterMetaType<PropertyMap>();
 	qDBusRegisterMetaType<InterfaceMap>();
@@ -50,38 +55,53 @@ void Proxies::initialize()
 		}
 	}
 
-	//	Find devices for our adapter
-	for (QDBusObjectPath path: objectMap.keys()) {
-		onInterfacesAdded(path, objectMap[path]);
-	}
+	if (adapter) {
+		
+		if (! adapter->powered()) {
+			adapter->setPowered(true);
+			if (! adapter->powered()) {
+				qWarning() << "Unable to turn on adapter" << adapter->name();
+				return;
+			}
+		}
 
-	adapter->StartDiscovery();	
-	qDebug() << "initialization done...";
+		qDebug() << "Have connected adapter";
+		//	Find devices for our adapter
+		for (QDBusObjectPath path: objectMap.keys()) {
+			onInterfacesAdded(path, objectMap[path]);
+		}
+
+		adapter->StartDiscovery();	
+		qDebug() << "initialization done...";
+	}
+	else {
+		qWarning() << "No bluetooth adapter found!";
+	}
 }
 
-void Proxies::onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces)
+void Devices::onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces)
 {
-	qDebug() << "Interfaces added:" << path.path() << interfaces.keys();
-	if (! devices.contains(path.path()) && interfaces.contains(DEVICE1_IF)) {
+	qDebug() << "Consider device at:" << path.path();
+	if (!devices.contains(path.path()) && interfaces.contains(DEVICE1_IF)) {
 		Device1 *device = new Device1(BLUEZ_SERVICE, path.path(), QDBusConnection::systemBus(), this);
 		if (device->adapter().path() == adapter->path()) {
 			devices[path.path()] = device;
-			emit deviceAdded(path.path(), device);
-			qDebug() << "Device added" << path.path();
+			qDebug() << "Emitting device added..";
+			emit deviceAdded(device);
 		}
 		else {
 			delete device;
 		}
-
 	}
 }
 
-void Proxies::onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces)
+void Devices::onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces)
 {
+	qDebug() << "Interfaces removed:" << interfaces;
 	if (interfaces.contains(DEVICE1_IF) && devices.contains(path.path())) {
-		Device1 *device = devices.take(path.path());
-		emit deviceRemoved(path.path());
-		qDebug() << "Device removed" << path.path();
-		delete device;
+		qDebug() << "Removing:" << path.path();
+		Device1* device = devices.take(path.path());
+		emit deviceAboutToBeRemoved(device);
+		delete device; 
 	}
 }

@@ -12,7 +12,7 @@
 
 #include "mainwindow.h"
 #include "org.freedesktop.DBus.ObjectManager.h"
-#include "proxies.h"
+#include "devices.h"
 
 int main(int argc, char *argv[])
 {

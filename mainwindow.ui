@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>813</width>
-    <height>612</height>
+    <width>664</width>
+    <height>617</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,37 +16,54 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QLabel" name="pairedDevicesLabel">
-      <property name="text">
+     <widget class="QGroupBox" name="pairedDevicesGroupBox">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>100</height>
+       </size>
+      </property>
+      <property name="title">
        <string>Paired devices</string>
       </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3"/>
      </widget>
     </item>
     <item>
-     <widget class="QListWidget" name="pairedDevicesList"/>
-    </item>
-    <item>
-     <widget class="QLabel" name="visibleDevicesLabel">
-      <property name="text">
-       <string>Visible devices</string>
+     <widget class="QGroupBox" name="otherDevicesGroupBox">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>100</height>
+       </size>
       </property>
+      <property name="title">
+       <string>Other devices</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2"/>
      </widget>
     </item>
     <item>
-     <widget class="QListWidget" name="visibleDevicesList"/>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>294</height>
+       </size>
+      </property>
+     </spacer>
     </item>
    </layout>
-   <zorder>visibleDevicesList</zorder>
-   <zorder>pairedDevicesLabel</zorder>
-   <zorder>pairedDevicesList</zorder>
-   <zorder>visibleDevicesLabel</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>813</width>
+     <width>664</width>
      <height>35</height>
     </rect>
    </property>

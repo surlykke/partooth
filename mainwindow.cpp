@@ -7,42 +7,40 @@
  */
 
 #include "mainwindow.h"
+#include "deviceframe.h"
 
-mainwindow::mainwindow() : proxies(0)
+mainwindow::mainwindow() : devices(this)
 {
 	widget.setupUi(this);
+
+	connect(&devices, SIGNAL(deviceAdded(Device1*)), SLOT(onDeviceAdded(Device1*)));
+	connect(&devices, SIGNAL(deviceAboutToBeRemoved(Device1*)), SLOT(onDeviceAboutToBeRemoved(Device1*)));
+	devices.initialize();
 }
 
 mainwindow::~mainwindow()
 {
 }
 
-void mainwindow::show()
+void mainwindow::onDeviceAdded(Device1* device)
 {
-	proxies = new Proxies();
-	connect(proxies, SIGNAL(deviceAdded(QString, Device1*)), SLOT(onDeviceAdded(QString, Device1*)));
-	connect(proxies, SIGNAL(deviceRemoved(QString)), SLOT(onDeviceRemoved(QString)));
-	connect(proxies, SIGNAL(deviceChanged(QString)), SLOT(onDeviceChanged(QString)));
-	proxies->initialize();
-
-	QMainWindow::show();
-
-}
-
-void mainwindow::onDeviceAdded(QString path, Device1* device)
-{
+	deviceFrames[device] = new DeviceFrame(device, this);
 	if (device->paired()) {
-		widget.pairedDevicesList->addItem(device->name());
+		widget.pairedDevicesGroupBox->layout()->addWidget(deviceFrames[device]);
 	}
 	else {
-		widget.visibleDevicesList->addItem(device->name());
+		widget.otherDevicesGroupBox->layout()->addWidget(deviceFrames[device]);
 	}
 }
 
-void mainwindow::onDeviceRemoved(QString path)
+void mainwindow::onDeviceAboutToBeRemoved(Device1* device)
 {
-}
-
-void mainwindow::onDeviceChanged(QString path)
-{
+	qDebug() << "onDeviceAboutToBeRemoved:" << device->name();
+	if (deviceFrames.contains(device)) {	
+		qDebug() << "Deleting";
+		delete deviceFrames.take(device);
+	}
+	else {
+		qDebug() << "Don't know this one";
+	}
 }
