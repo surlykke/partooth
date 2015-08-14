@@ -25,11 +25,20 @@ class MainWindow : public QMainWindow
 friend Controller;
 
 public:
-	MainWindow(DeviceListModel* pairedDevices, DeviceListModel* otherDevices);
+	MainWindow();
 	virtual ~MainWindow();
+
+signals:
+	void forgetDevice(int row);
+	void pairDevice(int row);
+
+private slots:
+	void onPairedDoubleClicked(const QModelIndex& index);
+	void onOtherDoubleClicked(const QModelIndex& index);
 
 private:
 	Ui::mainwindow widget;
+	
 };
 
 #endif	/* _MAINWINDOW_H */

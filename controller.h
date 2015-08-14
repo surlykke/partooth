@@ -27,6 +27,10 @@ public:
 	virtual ~Controller();
 	void initialize();
 
+public slots:
+	void forgetDevice(int row);
+	void pairDevice(int row);
+
 private slots:
 	void onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces);
 	void onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces);

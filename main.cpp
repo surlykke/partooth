@@ -18,13 +18,7 @@ int main(int argc, char *argv[])
 {
 	QApplication app(argc, argv);
 
-	DeviceListModel pairedDevices;
-	DeviceListModel otherDevices;
-
-	Controller controller(&pairedDevices, &otherDevices);
-	controller.initialize();
-
-	MainWindow mw(&pairedDevices, &otherDevices);
+	MainWindow mw;
 	mw.show();
 
 	return app.exec();	

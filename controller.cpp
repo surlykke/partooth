@@ -116,3 +116,17 @@ void Controller::onInterfacesRemoved(const QDBusObjectPath& path, const QStringL
 		otherDevices->removeAll(path);
 	}
 }
+
+void Controller::forgetDevice(int row)
+{
+	Device1* device = pairedDevices->at(row);
+	Adapter1 adapter(BLUEZ_SERVICE, device->adapter().path(), QDBusConnection::systemBus());
+	adapter.RemoveDevice(QDBusObjectPath(device->path()));
+}
+
+
+void Controller::pairDevice(int row)
+{
+	otherDevices->at(row)->Pair();
+}
+
