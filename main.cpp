@@ -12,13 +12,19 @@
 
 #include "mainwindow.h"
 #include "org.freedesktop.DBus.ObjectManager.h"
-#include "devices.h"
+#include "controller.h"
 
 int main(int argc, char *argv[])
 {
 	QApplication app(argc, argv);
 
-	mainwindow mw;
+	DeviceListModel pairedDevices;
+	DeviceListModel otherDevices;
+
+	Controller controller(&pairedDevices, &otherDevices);
+	controller.initialize();
+
+	MainWindow mw(&pairedDevices, &otherDevices);
 	mw.show();
 
 	return app.exec();	

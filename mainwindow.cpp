@@ -7,40 +7,15 @@
  */
 
 #include "mainwindow.h"
-#include "deviceframe.h"
 
-mainwindow::mainwindow() : devices(this)
+MainWindow::MainWindow(DeviceListModel* pairedDevices, DeviceListModel* otherDevices)
 {
 	widget.setupUi(this);
-
-	connect(&devices, SIGNAL(deviceAdded(Device1*)), SLOT(onDeviceAdded(Device1*)));
-	connect(&devices, SIGNAL(deviceAboutToBeRemoved(Device1*)), SLOT(onDeviceAboutToBeRemoved(Device1*)));
-	devices.initialize();
+	widget.pairedList->setModel(pairedDevices);
+	widget.otherList->setModel(otherDevices);
 }
 
-mainwindow::~mainwindow()
+MainWindow::~MainWindow()
 {
 }
 
-void mainwindow::onDeviceAdded(Device1* device)
-{
-	deviceFrames[device] = new DeviceFrame(device, this);
-	if (device->paired()) {
-		widget.pairedDevicesGroupBox->layout()->addWidget(deviceFrames[device]);
-	}
-	else {
-		widget.otherDevicesGroupBox->layout()->addWidget(deviceFrames[device]);
-	}
-}
-
-void mainwindow::onDeviceAboutToBeRemoved(Device1* device)
-{
-	qDebug() << "onDeviceAboutToBeRemoved:" << device->name();
-	if (deviceFrames.contains(device)) {	
-		qDebug() << "Deleting";
-		delete deviceFrames.take(device);
-	}
-	else {
-		qDebug() << "Don't know this one";
-	}
-}

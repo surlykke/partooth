@@ -8,41 +8,51 @@
  */
 
 
-#include "devices.h"
+#include "controller.h"
 #include "org.bluez.Device1.h"
 #define BLUEZ_SERVICE "org.bluez" 
 #define ADAPTER1_IF "org.bluez.Adapter1" 
 #define DEVICE1_IF "org.bluez.Device1" 
 
-Devices::Devices(QObject *parent) : 
-	QObject(parent),
+Controller::Controller(DeviceListModel* pairedDevices, DeviceListModel* otherDevices):
+	QObject(),
+	pairedDevices(pairedDevices),
+	otherDevices(otherDevices),
 	objectManager(0),
-	adapter(0),
-	devices()
+	adapter(0)
 {
 }
 
-Devices::~Devices()
+Controller::~Controller()
 {
 }
 
-void Devices::initialize()
+void Controller::initialize()
 {
 	qDBusRegisterMetaType<PropertyMap>();
 	qDBusRegisterMetaType<InterfaceMap>();
 	qDBusRegisterMetaType<ObjectMap>();
 	qDBusRegisterMetaType<QStringList>();
 		
-	
 	objectManager = new ObjectManager("org.bluez", "/", QDBusConnection::systemBus());
 	ObjectMap objectMap = objectManager->GetManagedObjects();
+
 	qDebug() << "connecting to objectmanager";
-	connect(objectManager, SIGNAL(InterfacesAdded(const QDBusObjectPath&, InterfaceMap)),
-			this, SLOT(onInterfacesAdded(const QDBusObjectPath&, InterfaceMap)));
+
+	connect(objectManager, 
+		    SIGNAL(InterfacesAdded(const QDBusObjectPath&, InterfaceMap)),
+			this, 
+		    SLOT(onInterfacesAdded(const QDBusObjectPath&, InterfaceMap)));
+	
 	qDebug() << "InterfacesAdded connected";
-	connect(objectManager, SIGNAL(InterfacesRemoved(const QDBusObjectPath&, const QStringList&)),
-			this, SLOT(onInterfacesRemoved(const QDBusObjectPath&, const QStringList&)));
+
+	connect(objectManager, 
+		    SIGNAL(InterfacesRemoved(const QDBusObjectPath&, const QStringList&)),
+			this, 
+		    SLOT(onInterfacesRemoved(const QDBusObjectPath&, const QStringList&)));
+
 	qDebug() << "InterfacesRemoved connected";
+
 	/*
 	 * We look for an object implementing the org.bluez.Adapter1 interface. For now
 	 * we don't handle having more than one adapter.
@@ -79,29 +89,30 @@ void Devices::initialize()
 	}
 }
 
-void Devices::onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces)
+void Controller::onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces)
 {
 	qDebug() << "Consider device at:" << path.path();
-	if (!devices.contains(path.path()) && interfaces.contains(DEVICE1_IF)) {
-		Device1 *device = new Device1(BLUEZ_SERVICE, path.path(), QDBusConnection::systemBus(), this);
-		if (device->adapter().path() == adapter->path()) {
-			devices[path.path()] = device;
-			qDebug() << "Emitting device added..";
-			emit deviceAdded(device);
+	pairedDevices->removeAll(path);
+	otherDevices->removeAll(path);
+	if (interfaces.contains(DEVICE1_IF)) {
+		Device1* device = new Device1(BLUEZ_SERVICE, path.path(), QDBusConnection::systemBus());
+	
+		if (device->paired()) {
+			qDebug() << "Adding paired device:" << device->name();
+			pairedDevices->addDevice(device);
 		}
 		else {
-			delete device;
+			qDebug() << "Adding unpaired device:" << device->name();
+			otherDevices->addDevice(device);
 		}
 	}
 }
 
-void Devices::onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces)
+void Controller::onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces)
 {
 	qDebug() << "Interfaces removed:" << interfaces;
-	if (interfaces.contains(DEVICE1_IF) && devices.contains(path.path())) {
-		qDebug() << "Removing:" << path.path();
-		Device1* device = devices.take(path.path());
-		emit deviceAboutToBeRemoved(device);
-		delete device; 
+	if (interfaces.contains(DEVICE1_IF)) {
+		pairedDevices->removeAll(path);
+		otherDevices->removeAll(path);
 	}
 }

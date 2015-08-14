@@ -15,24 +15,21 @@
 #include "org.bluez.Adapter1.h"
 #include "org.bluez.Device1.h"
 #include "org.freedesktop.DBus.ObjectManager.h"
-#include "devices.h"
-#include "deviceframe.h"
+#include "controller.h"
 
-class mainwindow : public QMainWindow
+class Controller;
+class MainWindow : public QMainWindow
 {
 	Q_OBJECT
-public:
-	mainwindow();
-	virtual ~mainwindow();
 
-private slots:
-	void onDeviceAdded(Device1* device);
-	void onDeviceAboutToBeRemoved(Device1* device);
+friend Controller;
+
+public:
+	MainWindow(DeviceListModel* pairedDevices, DeviceListModel* otherDevices);
+	virtual ~MainWindow();
 
 private:
 	Ui::mainwindow widget;
-	Devices devices;
-	QMap<Device1*, DeviceFrame*> deviceFrames;
 };
 
 #endif	/* _MAINWINDOW_H */

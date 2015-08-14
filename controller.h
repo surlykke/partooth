@@ -7,8 +7,8 @@
  * Please refer to the LICENSE file for a copy of the license.
  */
 
-#ifndef DEVICES_H
-#define	DEVICES_H
+#ifndef CONTROLLER_H
+#define	CONTROLLER_H
 
 #include <QObject>
 #include <QMap>
@@ -16,20 +16,16 @@
 #include "org.bluez.Adapter1.h"
 #include "org.bluez.Device1.h"
 #include "org.freedesktop.DBus.ObjectManager.h"
+#include "devicelistmodel.h"
 
-
-class Devices : public QObject
+class Controller : public QObject
 {
 	Q_OBJECT
 
 public:
-	Devices(QObject *parent = 0);
-	virtual ~Devices();
+	Controller(DeviceListModel* pairedDevices, DeviceListModel* otherDevices);
+	virtual ~Controller();
 	void initialize();
-
-signals:
-	void deviceAdded(Device1* device);	
-	void deviceAboutToBeRemoved(Device1* device);
 
 private slots:
 	void onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces);
@@ -39,10 +35,12 @@ private:
 	void findAdapter();
 	void findDevices();
 
+	DeviceListModel* pairedDevices;
+	DeviceListModel* otherDevices;
 	ObjectManager* objectManager;
 	Adapter1* adapter;
-	QMap<QString, Device1*> devices;
+	
 };
 
-#endif	/* PROXIES_H */
+#endif	/* CONTROLLER_H */
 

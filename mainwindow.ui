@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>664</width>
-    <height>617</height>
+    <width>634</width>
+    <height>736</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,32 +16,24 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QGroupBox" name="pairedDevicesGroupBox">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>100</height>
-       </size>
-      </property>
-      <property name="title">
+     <widget class="QLabel" name="pairedLabel">
+      <property name="text">
        <string>Paired devices</string>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_3"/>
      </widget>
     </item>
     <item>
-     <widget class="QGroupBox" name="otherDevicesGroupBox">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>100</height>
-       </size>
-      </property>
-      <property name="title">
+     <widget class="QListView" name="pairedList"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="otherLabel">
+      <property name="text">
        <string>Other devices</string>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_2"/>
      </widget>
+    </item>
+    <item>
+     <widget class="QListView" name="otherList"/>
     </item>
     <item>
      <spacer name="verticalSpacer">
@@ -63,7 +55,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>664</width>
+     <width>634</width>
      <height>35</height>
     </rect>
    </property>
