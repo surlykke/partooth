@@ -22,12 +22,10 @@ public:
 	virtual ~MainWindow();
 
 signals:
-	void forgetDevice(int row);
-	void pairDevice(int row);
+	void togglePairing(QString path);
 
 private slots:
-	void onPairedDoubleClicked(const QModelIndex& index);
-	void onOtherDoubleClicked(const QModelIndex& index);
+	void onDoubleClicked(const QModelIndex& index);
 
 private:
 	Ui::mainwindow widget;

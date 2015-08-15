@@ -20,18 +20,9 @@ MainWindow::MainWindow()
 	widget.pairedList->setModel(pairedDevices);
 	widget.otherList->setModel(otherDevices);
 
-
-	connect(widget.pairedList, 
-		    SIGNAL(doubleClicked(const QModelIndex&)), 
-		    SLOT(onPairedDoubleClicked(const QModelIndex&)));
-
-	connect(widget.otherList,
-		    SIGNAL(doubleClicked(const QModelIndex&)), 
-		    SLOT(onOtherDoubleClicked(const QModelIndex&)));
-
-
-	connect(this, SIGNAL(forgetDevice(int)), controller, SLOT(forgetDevice(int)));
-	connect(this, SIGNAL(pairDevice(int)), controller, SLOT(pairDevice(int)));
+	connect(widget.pairedList, SIGNAL(doubleClicked(const QModelIndex&)), SLOT(onDoubleClicked(const QModelIndex&)));
+	connect(widget.otherList, SIGNAL(doubleClicked(const QModelIndex&)), SLOT(onDoubleClicked(const QModelIndex&)));
+	connect(this, SIGNAL(togglePairing(QString)), controller, SLOT(togglePairing(QString)));
 
 	controller->initialize();
 }
@@ -40,24 +31,21 @@ MainWindow::~MainWindow()
 {
 }
 
-void MainWindow::onPairedDoubleClicked(const QModelIndex& index)
+void MainWindow::onDoubleClicked(const QModelIndex& index)
 {
+	qDebug() << "MainWindow::onDoubleClicked";
 	if (!index.isValid()) {
 		return; // necessary ?
 	}
 
-	QString title = tr("Forget device");
-	QString text = tr("Forget %1?").arg(index.data(Qt::DisplayRole).toString());
-	if (QMessageBox::question(this, title, text) == QMessageBox::Yes) {
-		emit forgetDevice(index.row());
-	}
-}
-
-void MainWindow::onOtherDoubleClicked(const QModelIndex& index)
-{
-	if (!index.isValid()) {
-		return;
+	if (sender() == widget.pairedList) {
+		QString title = tr("Forget device");
+		QString text = tr("Forget %1?").arg(index.data(Qt::DisplayRole).toString());
+		if (QMessageBox::question(this, title, text) != QMessageBox::Yes) {
+			return;	
+		}
 	}
 
-	emit pairDevice(index.row());
+	qDebug() << "Emit togglePairing " << index.data(PathRole).toString();
+	emit togglePairing(index.data(PathRole).toString()); 	
 }

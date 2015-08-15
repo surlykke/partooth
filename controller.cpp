@@ -29,6 +29,9 @@ Controller::~Controller()
 
 void Controller::initialize()
 {
+	connect(pairedDevices, SIGNAL(pairingChanged(QString, bool)), SLOT(pairingChanged(QString, bool)));
+	connect(otherDevices, SIGNAL(pairingChanged(QString, bool)), SLOT(pairingChanged(QString, bool)));
+
 	qDBusRegisterMetaType<PropertyMap>();
 	qDBusRegisterMetaType<InterfaceMap>();
 	qDBusRegisterMetaType<ObjectMap>();
@@ -91,42 +94,47 @@ void Controller::initialize()
 
 void Controller::onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces)
 {
-	qDebug() << "Consider device at:" << path.path();
-	pairedDevices->removeAll(path);
-	otherDevices->removeAll(path);
 	if (interfaces.contains(DEVICE1_IF)) {
-		Device* device = new Device(path.path());
-		
-		if (device->deviceInterface.paired()) {
-			qDebug() << "Adding paired device:" << device->deviceInterface.name();
-			pairedDevices->addDevice(device);
+		qDebug() << "Device added";
+		qDebug() << "path:" << path.path() 
+		         << ", name=" << interfaces[DEVICE1_IF]["Name"]
+		         << ", Paired=" << interfaces[DEVICE1_IF]["Paired"];
+		if (interfaces[DEVICE1_IF]["Paired"].toBool()) {
+			pairedDevices->add(path.path());
 		}
 		else {
-			qDebug() << "Adding unpaired device:" << device->deviceInterface.name();
-			otherDevices->addDevice(device);
+			otherDevices->add(path.path());
 		}
 	}
 }
 
 void Controller::onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces)
 {
-	qDebug() << "Interfaces removed:" << interfaces;
+	qDebug() << "Interfaces removed:" << path.path();
+	qDebug() << interfaces;
 	if (interfaces.contains(DEVICE1_IF)) {
-		pairedDevices->removeAll(path);
-		otherDevices->removeAll(path);
+		pairedDevices->remove(path.path());
+		otherDevices->remove(path.path());
 	}
 }
 
-void Controller::forgetDevice(int row)
+void Controller::togglePairing(QString path)
 {
-	Device* device = pairedDevices->at(row);
-	Adapter adapter(device->deviceInterface.adapter().path());
-	adapter.adapterInterface.RemoveDevice(device->objectPath);
+	qDebug() << "Controller::togglePairing(" << path << ")";
+	Device* device;
+	if (device = pairedDevices->device(path)) {
+		qDebug() << "Remove..";
+		Adapter(device->deviceInterface.adapter().path()).adapterInterface.RemoveDevice(QDBusObjectPath(path));
+	}
+	else if (device = otherDevices->device(path)) {
+		qDebug() << "Pair..";
+		device->deviceInterface.Pair();
+	}
 }
 
-
-void Controller::pairDevice(int row)
+void Controller::pairingChanged(QString path, bool paired)
 {
-	otherDevices->at(row)->deviceInterface.Pair();
+	(paired ? otherDevices : pairedDevices)->remove(path);
+	(paired ? pairedDevices : otherDevices)->add(path);
 }
 

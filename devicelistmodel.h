@@ -10,18 +10,34 @@
 
 #include "device.h"
 
-class DeviceListModel : public QAbstractListModel, public QList<Device*>
+#define PathRole 0x101
+
+class DeviceListModel : public QAbstractListModel
 {
+	Q_OBJECT
+
 public:
 	DeviceListModel();
 	virtual ~DeviceListModel();
 
-	void addDevice(Device* device);
-	bool contains(const QDBusObjectPath& path);
-	void removeAll(const QDBusObjectPath& path);
+	void add(const QString& path);
+	bool contains(const QString& path);
+	void remove(const QString& path);
 
+	Device* device(const QString& path);	
+	Device* deviceAt(int row);
 	virtual int rowCount(const QModelIndex& parent) const;
 	virtual QVariant data(const QModelIndex& index, int role) const;
+
+signals:
+	void pairingChanged(QString path, bool paired);
+
+private slots:
+    void onPropertiesChanged(const QString &interface, const QVariantMap &changed_properties, const QStringList &invalidated_properties);
+
+private:
+	void removeAt(int row);
+	QList<Device*> devices;
 
 };
 

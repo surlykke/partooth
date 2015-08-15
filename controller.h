@@ -16,6 +16,7 @@
 #include "org.freedesktop.DBus.ObjectManager.h"
 
 class Adapter;
+class Device;
 class DeviceListModel;
 class OrgFreedesktopDBusObjectManagerInterface;
 
@@ -29,8 +30,8 @@ public:
 	void initialize();
 
 public slots:
-	void forgetDevice(int row);
-	void pairDevice(int row);
+	void pairingChanged(QString path, bool paired);
+	void togglePairing(QString path);
 
 private slots:
 	void onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces);
