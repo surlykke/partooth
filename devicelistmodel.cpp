@@ -5,8 +5,9 @@
  * Created on 14. august 2015, 19:56
  */
 
-#include <qt/QtGui/qicon.h>
+#include <QIcon>
 
+#include "device.h"
 #include "devicelistmodel.h"
 
 DeviceListModel::DeviceListModel()
@@ -17,9 +18,9 @@ DeviceListModel::~DeviceListModel()
 {
 }
 
-void DeviceListModel::addDevice(Device1* device)
+void DeviceListModel::addDevice(Device* device)
 {
-	qDebug() << "Adding device " << device->name() << "at:" << size();
+	qDebug() << "Adding device " << device->deviceInterface.name() << "at:" << size();
 	beginInsertRows(QModelIndex(), size(), size());
 	append(device);
 	endInsertRows();
@@ -30,7 +31,7 @@ void DeviceListModel::removeAll(const QDBusObjectPath& path)
 {
 	QList<int> indexesToDelete;
 	for (int i = 0; i < size(); i++) {
-		if (at(i)->path() == path.path()) {
+		if (at(i)->objectPath == path) {
 			indexesToDelete.append(i);
 		}
 	}
@@ -46,8 +47,8 @@ void DeviceListModel::removeAll(const QDBusObjectPath& path)
 
 bool DeviceListModel::contains(const QDBusObjectPath& path)
 {
-	for (Device1* device : *this) {
-		if (device->path() == path.path()) {
+	for (Device* device : *this) {
+		if (device->objectPath == path) {
 			return true;
 		}
 	}
@@ -69,10 +70,10 @@ QVariant DeviceListModel::data(const QModelIndex& index, int role) const
 		return QVariant();
 	}
 	else if (role == Qt::DisplayRole) {
-		return at(index.row())->name();
+		return at(index.row())->deviceInterface.name();
 	}
 	else if (role == Qt::DecorationRole) {
-		return QIcon::fromTheme(at(index.row())->icon()); // FIXME fallback
+		return QIcon::fromTheme(at(index.row())->deviceInterface.icon()); // FIXME fallback
 	}
 	else {
 		return QVariant();

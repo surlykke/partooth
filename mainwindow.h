@@ -12,17 +12,10 @@
 #include <QMap>
 
 #include "ui_mainwindow.h"
-#include "org.bluez.Adapter1.h"
-#include "org.bluez.Device1.h"
-#include "org.freedesktop.DBus.ObjectManager.h"
-#include "controller.h"
 
-class Controller;
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT
-
-friend Controller;
 
 public:
 	MainWindow();

@@ -8,16 +8,15 @@
 #ifndef DEVICELISTMODEL_H
 #define	DEVICELISTMODEL_H
 
-#include "org.bluez.Device1.h"
+#include "device.h"
 
-
-class DeviceListModel : public QAbstractListModel, public QList<Device1*>
+class DeviceListModel : public QAbstractListModel, public QList<Device*>
 {
 public:
 	DeviceListModel();
 	virtual ~DeviceListModel();
 
-	void addDevice(Device1* device);
+	void addDevice(Device* device);
 	bool contains(const QDBusObjectPath& path);
 	void removeAll(const QDBusObjectPath& path);
 

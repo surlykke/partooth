@@ -6,8 +6,9 @@
  * Please refer to the LICENSE file for a copy of the license.
  */
 
-#include <qt/QtWidgets/qmessagebox.h>
-
+#include <QMessageBox>
+#include "devicelistmodel.h"
+#include "controller.h"
 #include "mainwindow.h"
 
 MainWindow::MainWindow()

@@ -9,10 +9,10 @@
 
 
 #include "controller.h"
-#include "org.bluez.Device1.h"
-#define BLUEZ_SERVICE "org.bluez" 
-#define ADAPTER1_IF "org.bluez.Adapter1" 
-#define DEVICE1_IF "org.bluez.Device1" 
+#include "device.h"
+#include "adapter.h"
+#include "constants.h"
+#include "devicelistmodel.h"
 
 Controller::Controller(DeviceListModel* pairedDevices, DeviceListModel* otherDevices):
 	QObject(),
@@ -34,7 +34,7 @@ void Controller::initialize()
 	qDBusRegisterMetaType<ObjectMap>();
 	qDBusRegisterMetaType<QStringList>();
 		
-	objectManager = new ObjectManager("org.bluez", "/", QDBusConnection::systemBus());
+	objectManager = new OrgFreedesktopDBusObjectManagerInterface(BLUEZ_SERVICE, "/", SYS_BUS);
 	ObjectMap objectMap = objectManager->GetManagedObjects();
 
 	qDebug() << "connecting to objectmanager";
@@ -59,18 +59,18 @@ void Controller::initialize()
      */
 	for (QDBusObjectPath path: objectMap.keys()) {
 		InterfaceMap interfaceMap = objectMap[path];
-		if (interfaceMap.contains(ADAPTER1_IF)) {
-			adapter = new Adapter1(BLUEZ_SERVICE, path.path(), QDBusConnection::systemBus(), this);
+		if (interfaceMap.contains(ADAPTER1_IF) && interfaceMap.contains(PROPS_IF)) {
+			adapter = new Adapter(path.path());
 			break;
 		}
 	}
 
 	if (adapter) {
 		
-		if (! adapter->powered()) {
-			adapter->setPowered(true);
-			if (! adapter->powered()) {
-				qWarning() << "Unable to turn on adapter" << adapter->name();
+		if (! adapter->adapterInterface.powered()) {
+			adapter->adapterInterface.setPowered(true);
+			if (! adapter->adapterInterface.powered()) {
+				qWarning() << "Unable to turn on adapter" << adapter->adapterInterface.name();
 				return;
 			}
 		}
@@ -81,7 +81,7 @@ void Controller::initialize()
 			onInterfacesAdded(path, objectMap[path]);
 		}
 
-		adapter->StartDiscovery();	
+		adapter->adapterInterface.StartDiscovery();	
 		qDebug() << "initialization done...";
 	}
 	else {
@@ -95,14 +95,14 @@ void Controller::onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap int
 	pairedDevices->removeAll(path);
 	otherDevices->removeAll(path);
 	if (interfaces.contains(DEVICE1_IF)) {
-		Device1* device = new Device1(BLUEZ_SERVICE, path.path(), QDBusConnection::systemBus());
-	
-		if (device->paired()) {
-			qDebug() << "Adding paired device:" << device->name();
+		Device* device = new Device(path.path());
+		
+		if (device->deviceInterface.paired()) {
+			qDebug() << "Adding paired device:" << device->deviceInterface.name();
 			pairedDevices->addDevice(device);
 		}
 		else {
-			qDebug() << "Adding unpaired device:" << device->name();
+			qDebug() << "Adding unpaired device:" << device->deviceInterface.name();
 			otherDevices->addDevice(device);
 		}
 	}
@@ -119,14 +119,14 @@ void Controller::onInterfacesRemoved(const QDBusObjectPath& path, const QStringL
 
 void Controller::forgetDevice(int row)
 {
-	Device1* device = pairedDevices->at(row);
-	Adapter1 adapter(BLUEZ_SERVICE, device->adapter().path(), QDBusConnection::systemBus());
-	adapter.RemoveDevice(QDBusObjectPath(device->path()));
+	Device* device = pairedDevices->at(row);
+	Adapter adapter(device->deviceInterface.adapter().path());
+	adapter.adapterInterface.RemoveDevice(device->objectPath);
 }
 
 
 void Controller::pairDevice(int row)
 {
-	otherDevices->at(row)->Pair();
+	otherDevices->at(row)->deviceInterface.Pair();
 }
 

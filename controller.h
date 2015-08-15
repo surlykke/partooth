@@ -13,10 +13,11 @@
 #include <QObject>
 #include <QMap>
 
-#include "org.bluez.Adapter1.h"
-#include "org.bluez.Device1.h"
 #include "org.freedesktop.DBus.ObjectManager.h"
-#include "devicelistmodel.h"
+
+class Adapter;
+class DeviceListModel;
+class OrgFreedesktopDBusObjectManagerInterface;
 
 class Controller : public QObject
 {
@@ -41,8 +42,8 @@ private:
 
 	DeviceListModel* pairedDevices;
 	DeviceListModel* otherDevices;
-	ObjectManager* objectManager;
-	Adapter1* adapter;
+	OrgFreedesktopDBusObjectManagerInterface* objectManager;
+	Adapter* adapter;
 	
 };
 
