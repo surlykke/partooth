@@ -9,14 +9,20 @@
 #include "constants.h"
 
 Device::Device(QString path, QObject* parent) :	
-    QObject(parent),
-	deviceInterface(BLUEZ_SERVICE, path, SYS_BUS),
-	propertiesInterface(BLUEZ_SERVICE, path, SYS_BUS),
-	objectPath(path)
+	OrgBluezDevice1Interface(BLUEZ_SERVICE, path, SYS_BUS),
+	propertiesInterface(new OrgFreedesktopDBusPropertiesInterface(BLUEZ_SERVICE, path, SYS_BUS, this))
 {
+	connect(propertiesInterface,
+		    SIGNAL(PropertiesChanged(const QString&, const QVariantMap&, const QStringList&)),
+			SLOT(onPropertiesChanged()));
 }
 
 Device::~Device()
 {
+}
+
+void Device::onPropertiesChanged()
+{
+	emit propertiesChanged(path());
 }
 

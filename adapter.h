@@ -12,15 +12,13 @@
 #include "org.freedesktop.DBus.Properties.h"
 
 
-class Adapter : public QObject
+class Adapter : public OrgBluezAdapter1Interface
 {
 	Q_OBJECT
 
 public:
 	explicit Adapter(QString path, QObject* parent = 0);
 	virtual ~Adapter();
-    OrgBluezAdapter1Interface adapterInterface;
-	OrgFreedesktopDBusPropertiesInterface propertiesInterface;
 };
 
 #endif	/* ADAPTER_H */

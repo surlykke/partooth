@@ -10,9 +10,7 @@
 #include "constants.h"
 
 Adapter::Adapter(QString path, QObject* parent) :	
-	QObject(parent),
-	adapterInterface(BLUEZ_SERVICE, path, SYS_BUS),
-	propertiesInterface(BLUEZ_SERVICE, path, SYS_BUS)
+	OrgBluezAdapter1Interface(BLUEZ_SERVICE, path, SYS_BUS, parent)
 {
 }
 

@@ -14,14 +14,21 @@
 #include "org.freedesktop.DBus.Properties.h"
 
 
-class Device : public QObject
+class Device : public OrgBluezDevice1Interface
 {
+	Q_OBJECT
+
 public:
 	Device(QString path, QObject* parent = 0);
 	virtual ~Device();
-	OrgBluezDevice1Interface deviceInterface;
-	OrgFreedesktopDBusPropertiesInterface propertiesInterface;
-	const QDBusObjectPath objectPath;
+	const OrgFreedesktopDBusPropertiesInterface* propertiesInterface;
+
+signals:
+	void propertiesChanged(QString path);
+
+private slots:
+	void onPropertiesChanged();
+
 };
 
 #endif	/* DEVICE_H */
