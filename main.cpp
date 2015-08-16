@@ -12,7 +12,6 @@
 
 #include "mainwindow.h"
 #include "org.freedesktop.DBus.ObjectManager.h"
-#include "controller.h"
 
 int main(int argc, char *argv[])
 {

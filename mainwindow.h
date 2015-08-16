@@ -21,9 +21,6 @@ public:
 	MainWindow();
 	virtual ~MainWindow();
 
-signals:
-	void togglePairing(QString path);
-
 private slots:
 	void onDoubleClicked(const QModelIndex& index);
 

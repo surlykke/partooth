@@ -20,24 +20,33 @@ public:
 	DeviceListModel();
 	virtual ~DeviceListModel();
 
+	void initialize();
+
 	void add(const QString& path);
-	bool contains(const QString& path);
-	void remove(const QString& path);
+	bool contains(const QString& path) const;
+	void remove(const QString& path); 
+	int row(const QString& path) const;
 
 	Device* device(const QString& path);	
-	Device* deviceAt(int row);
 	virtual int rowCount(const QModelIndex& parent) const;
 	virtual QVariant data(const QModelIndex& index, int role) const;
+	virtual Qt::ItemFlags flags(const QModelIndex& index) const;
 
-signals:
-	void pairingChanged(QString path, bool paired);
 
 private slots:
     void onPropertiesChanged(const QString &interface, const QVariantMap &changed_properties, const QStringList &invalidated_properties);
+	void onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces);
+	void onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces);
+
 
 private:
-	void removeAt(int row);
-	QList<Device*> devices;
+	void removePaired(int index);
+	void removeOther(int index);
+	QVariant dataForHeading(QString heading, int role) const;
+	QVariant dataForDevice(Device* device, int role) const;
+	inline int rows() const { return 2 + pairedDevices.size() + otherDevices.size(); }
+	QList<Device*> pairedDevices;
+	QList<Device*> otherDevices;
 
 };
 
