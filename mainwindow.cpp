@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include "devicelistmodel.h"
 #include "mainwindow.h"
+#include "devicedialog.h"
 
 MainWindow::MainWindow()
 {
@@ -31,5 +32,8 @@ void MainWindow::onDoubleClicked(const QModelIndex& index)
 		return; // necessary ?
 	}
 
-	qDebug() << "Device" << index.data(PathRole) << "double clicked";
+	QVariant path = index.data(PathRole);
+	if (path.isValid()) {
+		DeviceDialog(path.toString()).exec();
+	}
 }

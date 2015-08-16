@@ -32,10 +32,12 @@ void DeviceListModel::initialize()
 	OrgFreedesktopDBusObjectManagerInterface* objectManager = 
 		new OrgFreedesktopDBusObjectManagerInterface(BLUEZ_SERVICE, "/", SYS_BUS);
 
+	qDebug() << "Connecting interfaces added";
 	connect(objectManager, 
 		    SIGNAL(InterfacesAdded(const QDBusObjectPath&, InterfaceMap)),
 		    SLOT(onInterfacesAdded(const QDBusObjectPath&, InterfaceMap)));
 
+	qDebug() << "Connecting interfaces removed";
 	connect(objectManager, 
 		    SIGNAL(InterfacesRemoved(const QDBusObjectPath&, const QStringList&)),
 		    SLOT(onInterfacesRemoved(const QDBusObjectPath&, const QStringList&)));
@@ -49,7 +51,10 @@ void DeviceListModel::initialize()
 		if (interfaceMap.contains(ADAPTER1_IF) && interfaceMap.contains(PROPS_IF)) {
 			Adapter adapter(path.path());
 			adapter.adapterInterface.setPowered(true);
-			if (! adapter.adapterInterface.powered()) {
+			if (adapter.adapterInterface.powered()) {
+				adapter.adapterInterface.StartDiscovery();
+			}
+			else {
 				qWarning() << "Unable to turn on adapter" << adapter.adapterInterface.name();
 			}
 		}
@@ -203,14 +208,22 @@ void DeviceListModel::onPropertiesChanged(const QString& interface, const QVaria
 
 void DeviceListModel::onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces)
 {
+	qDebug() << "Interfaces added for"  << path.path();
+	qDebug() << interfaces;
+	qDebug() << "----------------------------------------------------------------------------------";
 	if (interfaces.contains(DEVICE1_IF)) {
+		qDebug() << "Adding" << path.path();
 		add(path.path());
 	}
 }
 
 void DeviceListModel::onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces)
 {
+	qDebug() << "Interfaces removed for" << path.path();
+	qDebug() << interfaces;
+	qDebug() << "----------------------------------------------------------------------------------";
 	if (interfaces.contains(DEVICE1_IF)) {
+		qDebug() << "Removing" << path.path();
 		remove(path.path());
 	}
 }
