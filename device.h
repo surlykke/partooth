@@ -27,7 +27,7 @@ signals:
 	void propertiesChanged(QString path);
 
 private slots:
-	void onPropertiesChanged();
+	void onPropertiesChanged(const QString &interface, const QVariantMap &changed_properties, const QStringList &invalidated_properties);
 
 };
 

@@ -21,6 +21,7 @@ public:
 private slots:
 	void update();
 	void onPairButtonClicked();
+	void onConnectButtonClicked();
 	void onForgetButtonClicked();
 
 private:

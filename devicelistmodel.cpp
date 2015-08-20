@@ -45,7 +45,7 @@ void DeviceListModel::initialize()
 		
 	ObjectMap objectMap = objectManager->GetManagedObjects();
 
-	// Find adapters, turn them on
+	// Find adapters, turn them on, make them scan
 	for (QDBusObjectPath path: objectMap.keys()) {
 		InterfaceMap interfaceMap = objectMap[path];
 		if (interfaceMap.contains(ADAPTER1_IF) && interfaceMap.contains(PROPS_IF)) {
@@ -91,10 +91,11 @@ Device* DeviceListModel::device(const QString& path)
 
 void DeviceListModel::add(const QString& path)
 {
-	qDebug() << "Adding device " << path; 
 
 	if (! device(path)) {
 		Device* device = new Device(path, this);
+		qDebug() << "Adding device " << path << ", alias:" << device->alias() << ", icon:" << device->icon();
+
 		connect(device->propertiesInterface, 
 			    SIGNAL(PropertiesChanged(const QString&, const QVariantMap&, const QStringList&)),
 				SLOT(onPropertiesChanged(const QString&, const QVariantMap&, const QStringList&)));
@@ -234,7 +235,7 @@ void DeviceListModel::onInterfacesRemoved(const QDBusObjectPath& path, const QSt
 QVariant DeviceListModel::dataForHeading(QString heading, int role) const
 {
 	if (role == Qt::DisplayRole) {
-		return "    " + heading;
+		return heading;
 	}
 	else if (role == Qt::ForegroundRole) {
 		return QColor(Qt::black);
@@ -242,9 +243,9 @@ QVariant DeviceListModel::dataForHeading(QString heading, int role) const
 	else if (role == Qt::SizeHintRole) {
 		return QSize(0,60);
 	}
-/*	else if (role == Qt::TextAlignmentRole) {
+	else if (role == Qt::TextAlignmentRole) {
 		return Qt::AlignCenter;
-	}*/
+	}
 	else {
 		return QVariant();
 	}
