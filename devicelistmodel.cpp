@@ -72,159 +72,33 @@ void DeviceListModel::initialize()
 
 
 
-Device* DeviceListModel::device(const QString& path)
-{
-	for (Device* dev : pairedDevices) {
-		if (dev->path() == path) {
-			return dev;
-		}
-	}
-	
-	for (Device* dev : otherDevices) {
-		if (dev->path() == path) {
-			return dev;
-		}
-	}
-
-	return NULL;
-}
-
 void DeviceListModel::add(const QString& path)
 {
 
-	if (! device(path)) {
-		Device* device = new Device(path, this);
-		qDebug() << "Adding device " << path << ", alias:" << device->alias() << ", icon:" << device->icon();
-
-		connect(device->propertiesInterface, 
-			    SIGNAL(PropertiesChanged(const QString&, const QVariantMap&, const QStringList&)),
-				SLOT(onPropertiesChanged(const QString&, const QVariantMap&, const QStringList&)));
-
-		if (device->paired()) {
-			int row = 1 + pairedDevices.size();
-			beginInsertRows(QModelIndex(), row, row);
-			pairedDevices.append(device);
-			endInsertRows();		
-		}
-		else {
-			int row = 2 + pairedDevices.size() + otherDevices.size();
-			beginInsertRows(QModelIndex(), row, row);
-			otherDevices.append(device);
-			endInsertRows();		
-		}
+	if (! devices.contains(path)) {
+		devices[path] = new Device(path, this);
+		emit deviceAdded(devices[path]);
 	}
 }
 
 void DeviceListModel::remove(const QString& path)
 {
-	QList<int> indexesToDelete;
-	for (int i = 0; i < pairedDevices.size(); i++) {
-		if (pairedDevices[i]->path() == path) {
-			removePaired(i);
-			return;
-		}
-	}
-
-	for (int i = 0; i < otherDevices.size(); i++) {
-		if (otherDevices[i]->path() == path) {
-			removeOther(i);
-			return;
-		}
+	if (devices.contains(path)) {
+		devices.take(path)->deleteLater();
 	}
 }
 
-int DeviceListModel::row(const QString& path) const
-{
-	for (int i = 0; i < pairedDevices.size(); i++) {
-		if (pairedDevices[i]->path() == path) {
-			return 1 + i;
-		}
-	}
-
-	for (int i = 0; i < otherDevices.size(); i++) {
-		if (otherDevices[i]->path() == path) {
-			return 2 + pairedDevices.size() + i;
-		}
-	}
-}
-
-
-int DeviceListModel::rowCount(const QModelIndex& parent) const
-{
-	return rows();
-}
-
-QVariant DeviceListModel::data(const QModelIndex& index, int role) const
-{
-	if (! index.isValid()) {
-		return QVariant();
-	}
-	else if (0> index.row() || index.row() >= rows()) {
-		return QVariant();
-	}
-	else if (index.row() == 0) { // Heading for paired devices
-		return dataForHeading(tr("Paired devices"), role);
-	}
-	else if (index.row() == 1 + pairedDevices.size()) { // Heading for other devices
-		return dataForHeading(tr("Other devices"), role);
-	}
-	else if (index.row() <= pairedDevices.size()) { 
-		return dataForDevice(pairedDevices[index.row() - 1], role);
-	}
-	else {
-		return dataForDevice(otherDevices[index.row() - pairedDevices.size() - 2], role);
-	}
-}
-
-Qt::ItemFlags DeviceListModel::flags(const QModelIndex& index) const
-{
-	if (index.row() == 0 || index.row() == 1 + pairedDevices.size()) { // one of the 'heading' lines
-		return Qt::NoItemFlags;
-	}
-	else {
-		return QAbstractListModel::flags(index);
-	}
-}
-
-
-void DeviceListModel::onPropertiesChanged(const QString& interface, const QVariantMap& changed_properties, const QStringList& invalidated_properties)
-{
-	if (DEVICE1_IF == interface) {
-		OrgFreedesktopDBusPropertiesInterface* props = 
-			dynamic_cast<OrgFreedesktopDBusPropertiesInterface*>(sender());
-		
-		if (props) {
-			QString path = props->path();
-			if (changed_properties.contains("Paired")) {
-				remove(path);
-				add(path);
-			}
-			else if (changed_properties.contains("name") || changed_properties.contains("icon")) {
-				emit dataChanged(index(row(path)), index(row(path)));
-			}
-		}
-	}
-
-}
 
 void DeviceListModel::onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces)
 {
-	qDebug() << "Interfaces added for"  << path.path();
-	qDebug() << interfaces;
-	qDebug() << "----------------------------------------------------------------------------------";
 	if (interfaces.contains(DEVICE1_IF)) {
-		qDebug() << "Adding" << path.path();
 		add(path.path());
 	}
 }
 
 void DeviceListModel::onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces)
 {
-	qDebug() << "Interfaces removed for" << path.path();
-	qDebug() << interfaces;
-	qDebug() << "----------------------------------------------------------------------------------";
 	if (interfaces.contains(DEVICE1_IF)) {
-		qDebug() << "Removing" << path.path();
 		remove(path.path());
 	}
 }
@@ -232,64 +106,3 @@ void DeviceListModel::onInterfacesRemoved(const QDBusObjectPath& path, const QSt
 
 
 
-QVariant DeviceListModel::dataForHeading(QString heading, int role) const
-{
-	if (role == Qt::DisplayRole) {
-		return heading;
-	}
-	else if (role == Qt::ForegroundRole) {
-		return QColor(Qt::black);
-	}
-	else if (role == Qt::SizeHintRole) {
-		return QSize(0,60);
-	}
-	else if (role == Qt::TextAlignmentRole) {
-		return Qt::AlignCenter;
-	}
-	else {
-		return QVariant();
-	}
-}
-
-QVariant DeviceListModel::dataForDevice(Device* device, int role) const
-{
-	if (role == Qt::DisplayRole) {
-		return device->name();
-	}
-	else if (role == Qt::DecorationRole) {
-		return QIcon::fromTheme(device->icon());
-	}
-	else if (role == PathRole) {
-		return device->path();
-	}
-	else {
-		return QVariant();
-	}
-}
-
-
-
-
-void DeviceListModel::removePaired(int index)
-{
-
-	if (index < 0 || index >= pairedDevices.size()) {
-		return;
-	}
-	int row = 1 + index;
-	beginRemoveRows(QModelIndex(), row, row);
-	pairedDevices.takeAt(index)->deleteLater();
-	endRemoveRows();
-}
-
-void DeviceListModel::removeOther(int index)
-{
-	if (index < 0 || index >= otherDevices.size()) {
-		return;
-	}
-	int row = 2 + pairedDevices.size() + index;
-	beginRemoveRows(QModelIndex(), row, row);
-	otherDevices.takeAt(index)->deleteLater();
-	endRemoveRows();
-
-}

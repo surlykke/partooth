@@ -8,11 +8,14 @@
 #ifndef DEVICELISTMODEL_H
 #define	DEVICELISTMODEL_H
 
-#include "device.h"
+#include <QObject>
+#include <QDBusObjectPath>
 
-#define PathRole 0x101
+#include "dbus_types.h"
 
-class DeviceListModel : public QAbstractListModel
+class Device;
+
+class DeviceListModel : public QObject
 {
 	Q_OBJECT
 
@@ -25,29 +28,16 @@ public:
 	void add(const QString& path);
 	bool contains(const QString& path) const;
 	void remove(const QString& path); 
-	int row(const QString& path) const;
 
-	Device* device(const QString& path);	
-	virtual int rowCount(const QModelIndex& parent) const;
-	virtual QVariant data(const QModelIndex& index, int role) const;
-	virtual Qt::ItemFlags flags(const QModelIndex& index) const;
-
+signals:
+	void deviceAdded(Device* device);
 
 private slots:
-    void onPropertiesChanged(const QString &interface, const QVariantMap &changed_properties, const QStringList &invalidated_properties);
 	void onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces);
 	void onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces);
 
-
 private:
-	void removePaired(int index);
-	void removeOther(int index);
-	QVariant dataForHeading(QString heading, int role) const;
-	QVariant dataForDevice(Device* device, int role) const;
-	inline int rows() const { return 2 + pairedDevices.size() + otherDevices.size(); }
-	QList<Device*> pairedDevices;
-	QList<Device*> otherDevices;
-
+	QMap<QString, Device*> devices;
 };
 
 #endif	/* DEVICELISTMODEL_H */

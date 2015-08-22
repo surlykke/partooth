@@ -9,9 +9,10 @@
 #ifndef _MAINWINDOW_H
 #define	_MAINWINDOW_H
 
-#include <QMap>
-
 #include "ui_mainwindow.h"
+
+class Device;
+class DeviceFrame;
 
 class MainWindow : public QMainWindow
 {
@@ -21,8 +22,15 @@ public:
 	MainWindow();
 	virtual ~MainWindow();
 
+signals:
+	void frameClicked(DeviceFrame* deviceFrame);
+
+protected:
+	virtual void paintEvent(QPaintEvent* paintEvent);
+
 private slots:
-	void onDoubleClicked(const QModelIndex& index);
+	void onDeviceAdded(Device* device);
+	void onPairingChanged(DeviceFrame* deviceFrame, bool paired);
 
 private:
 	Ui::mainwindow widget;
