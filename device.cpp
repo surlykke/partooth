@@ -12,6 +12,8 @@ Device::Device(QString path, QObject* parent) :
 	OrgBluezDevice1Interface(BLUEZ_SERVICE, path, SYS_BUS),
 	propertiesInterface(new OrgFreedesktopDBusPropertiesInterface(BLUEZ_SERVICE, path, SYS_BUS, this))
 {
+	qDebug() << "Device created";
+	showServices();
 	connect(propertiesInterface,
 		    SIGNAL(PropertiesChanged(const QString&, const QVariantMap&, const QStringList&)),
 			SLOT(onPropertiesChanged(const QString&, const QVariantMap&, const QStringList&)));
@@ -25,6 +27,10 @@ void Device::onPropertiesChanged(const QString& interface, const QVariantMap& ch
 {
 	qDebug() << "PropertiesChanged, changed_properties:" << changed_properties << "\n"
 	         << "invalidated_properties:" << invalidated_properties;
+	showServices();
 	emit propertiesChanged(path());
 }
 
+void Device::showServices()
+{
+}

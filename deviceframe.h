@@ -10,6 +10,7 @@
 
 #include "ui_deviceframe.h"
 class Device;
+class ServiceFrame;
 
 class DeviceFrame : public QFrame
 {
@@ -36,7 +37,8 @@ private:
 
 	Device* device;
 	bool selected;
-	
+	QMap<QString, ServiceFrame*> serviceFrames;
+
 	Ui::DeviceFrame frame;
 };
 

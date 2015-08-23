@@ -21,7 +21,7 @@ class Device : public OrgBluezDevice1Interface
 public:
 	Device(QString path, QObject* parent = 0);
 	virtual ~Device();
-	const OrgFreedesktopDBusPropertiesInterface* propertiesInterface;
+	OrgFreedesktopDBusPropertiesInterface* propertiesInterface;
 
 signals:
 	void propertiesChanged(QString path);
@@ -29,6 +29,7 @@ signals:
 private slots:
 	void onPropertiesChanged(const QString &interface, const QVariantMap &changed_properties, const QStringList &invalidated_properties);
 
+	void showServices();
 };
 
 #endif	/* DEVICE_H */

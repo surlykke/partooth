@@ -8,6 +8,7 @@
 
 #include "deviceframe.h"
 #include "device.h"
+#include "serviceframe.h"
 
 DeviceFrame::DeviceFrame(Device* device, QWidget* parent) : 
 	QFrame(parent),
@@ -20,7 +21,9 @@ DeviceFrame::DeviceFrame(Device* device, QWidget* parent) :
 			SLOT(devicePropertiesChanged(const QString&, const QVariantMap&, const QStringList&)));
 	connect(frame.pairButton, SIGNAL(clicked()), SLOT(onPairClicked()));
 
-	frame.pairButtonFrame->hide();
+	frame.trustCheckBox->setText(tr("Trust %1").arg(device->alias()));
+	frame.useServicesLabel->setText(tr("Use these services from %1").arg(device->alias()));
+	frame.selectedFrame->hide();
 
 	connect(device, SIGNAL(destroyed(QObject*)), SLOT(deleteLater()));
 	update();
@@ -46,7 +49,7 @@ void DeviceFrame::onDeviceFrameClicked(DeviceFrame* deviceFrame)
 		selected = !selected;
 	}
 
-	frame.pairButtonFrame->setVisible(selected);
+	frame.selectedFrame->setVisible(selected);
 	setFrameStyle(selected ? QFrame::StyledPanel : QFrame::NoFrame);
 }
 
@@ -75,4 +78,15 @@ void DeviceFrame::update() {
 	}
 	
 	frame.nameLabel->setText(device->name());
+
+	for (ServiceFrame* serviceFrame : serviceFrames.values()) {
+		serviceFrame->deleteLater();
+	}
+	serviceFrames.clear();
+
+	for (QString uuid : device->uUIDs()) {
+		ServiceFrame* serviceFrame = new ServiceFrame(uuid);
+		frame.servicesFrame->layout()->addWidget(serviceFrame);
+		serviceFrames[uuid] = serviceFrame;
+	}
 }
