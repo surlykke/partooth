@@ -9,6 +9,9 @@
 #ifndef _MAINWINDOW_H
 #define	_MAINWINDOW_H
 
+#include <QDBusObjectPath>
+
+#include "dbus_types.h"
 #include "ui_mainwindow.h"
 
 class Device;
@@ -29,12 +32,13 @@ protected:
 	virtual void paintEvent(QPaintEvent* paintEvent);
 
 private slots:
-	void onDeviceAdded(Device* device);
-	void onPairingChanged(DeviceFrame* deviceFrame, bool paired);
+	void onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces);
+	void onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces);
 
 private:
+	void add(const QDBusObjectPath& objectPath);
 	Ui::mainwindow widget;
-	
+	QMap<QString, DeviceFrame*> frames;	
 };
 
 #endif	/* _MAINWINDOW_H */

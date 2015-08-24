@@ -7,9 +7,10 @@
 
 #include "serviceframe.h"
 
-ServiceFrame::ServiceFrame(QString uuid) {
+ServiceFrame::ServiceFrame(QByteArray shortFormUuid) {
 	widget.setupUi(this);
-	widget.serviceNameLabel->setText(uuid);
+	widget.serviceNameLabel->setText(shortFormUuid);
 }
 
-ServiceFrame::~ServiceFrame() {} 
+ServiceFrame::~ServiceFrame() {}
+

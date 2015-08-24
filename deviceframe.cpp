@@ -10,9 +10,9 @@
 #include "device.h"
 #include "serviceframe.h"
 
-DeviceFrame::DeviceFrame(Device* device, QWidget* parent) : 
+DeviceFrame::DeviceFrame(QString path, QWidget* parent) : 
 	QFrame(parent),
-	device(device),
+	device(new Device(path, this)),
 	selected(false)
 {
 	frame.setupUi(this);
@@ -31,6 +31,17 @@ DeviceFrame::DeviceFrame(Device* device, QWidget* parent) :
 
 DeviceFrame::~DeviceFrame()
 {
+}
+
+bool DeviceFrame::paired()
+{
+	return device->paired();
+}
+
+void DeviceFrame::paintEvent(QPaintEvent*)
+{
+	int numServices = frame.servicesFrame->layout()->count() - 1;
+	frame.noServicesLabel->setVisible(numServices <= 0);
 }
 
 void DeviceFrame::mouseReleaseEvent(QMouseEvent* mouseEvent)
@@ -85,8 +96,18 @@ void DeviceFrame::update() {
 	serviceFrames.clear();
 
 	for (QString uuid : device->uUIDs()) {
-		ServiceFrame* serviceFrame = new ServiceFrame(uuid);
+		QByteArray shortFormUuid = uuid2shortForm(uuid);
+		ServiceFrame* serviceFrame = new ServiceFrame(shortFormUuid);
 		frame.servicesFrame->layout()->addWidget(serviceFrame);
-		serviceFrames[uuid] = serviceFrame;
+		serviceFrames[shortFormUuid] = serviceFrame;
 	}
+}
+
+QByteArray DeviceFrame::uuid2shortForm(QString uuid)
+{
+	QUuid quuid(uuid);
+	QByteArray asArray = quuid.toByteArray();
+	QByteArray result = asArray.mid(5, 4);
+	qDebug() << "Convert" << uuid << "->" << asArray << "->" << result;
+	return result;
 }

@@ -9,6 +9,7 @@
 #define	_DEVICEWIDGET_H
 
 #include "ui_deviceframe.h"
+#include "org.bluez.Device1.h"
 class Device;
 class ServiceFrame;
 
@@ -16,13 +17,17 @@ class DeviceFrame : public QFrame
 {
 	Q_OBJECT
 public:
-	DeviceFrame(Device *device, QWidget* parent = 0);
+	DeviceFrame(QString path, QWidget* parent = 0);
 	virtual ~DeviceFrame();
+	
+	bool paired();
+
+protected:
+	virtual void paintEvent(QPaintEvent*);
 
 signals:
 	void pairingChanged(DeviceFrame* deviceFrame, bool paired);
 	void clicked(DeviceFrame* deviceFrame);
-
 public slots:
 	void onDeviceFrameClicked(DeviceFrame* deviceFrame);
 
@@ -37,7 +42,9 @@ private:
 
 	Device* device;
 	bool selected;
-	QMap<QString, ServiceFrame*> serviceFrames;
+	QMap<QByteArray, ServiceFrame*> serviceFrames;
+
+	QByteArray uuid2shortForm(QString uuid);
 
 	Ui::DeviceFrame frame;
 };

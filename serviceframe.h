@@ -7,10 +7,10 @@ class ServiceFrame : public QWidget
 {
 	Q_OBJECT
 public:
-	ServiceFrame(QString uuid);
+	ServiceFrame(QByteArray shortFormFormUuid);
 	virtual ~ServiceFrame();
+	const QByteArray shortFormUuid;
 
-	const QString uuid;
 private:
 	Ui::ServiceFrame widget;
 
