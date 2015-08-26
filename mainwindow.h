@@ -25,9 +25,6 @@ public:
 	MainWindow();
 	virtual ~MainWindow();
 
-signals:
-	void frameClicked(DeviceFrame* deviceFrame);
-
 protected:
 	virtual void paintEvent(QPaintEvent* paintEvent);
 
@@ -37,8 +34,11 @@ private slots:
 
 private:
 	void add(const QDBusObjectPath& objectPath);
+	void remove(const QDBusObjectPath& objectPath);
+
 	Ui::mainwindow widget;
-	QMap<QString, DeviceFrame*> frames;	
+	QMap<QString, DeviceFrame*> knownDevices;	
+	QMap<QString, DeviceFrame*> otherDevices;
 };
 
 #endif	/* _MAINWINDOW_H */

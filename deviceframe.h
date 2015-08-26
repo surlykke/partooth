@@ -19,33 +19,14 @@ class DeviceFrame : public QFrame
 public:
 	DeviceFrame(QString path, QWidget* parent = 0);
 	virtual ~DeviceFrame();
-	
-	bool paired();
-
-protected:
-	virtual void paintEvent(QPaintEvent*);
-
-signals:
-	void pairingChanged(DeviceFrame* deviceFrame, bool paired);
-	void clicked(DeviceFrame* deviceFrame);
-public slots:
-	void onDeviceFrameClicked(DeviceFrame* deviceFrame);
+	Device* device;
 
 protected:
 	virtual void mouseReleaseEvent(QMouseEvent* mouseEvent);
+	virtual void mousePressEvent(QMouseEvent*);
 
-private slots:
-    void devicePropertiesChanged(const QString &interface, const QVariantMap &changed_properties, const QStringList &invalidated_properties);
-	void onPairClicked(); 
 private:
-	void update();
-
-	Device* device;
-	bool selected;
-	QMap<QByteArray, ServiceFrame*> serviceFrames;
-
-	QByteArray uuid2shortForm(QString uuid);
-
+	void connect();	
 	Ui::DeviceFrame frame;
 };
 

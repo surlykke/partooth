@@ -8,6 +8,7 @@
 
 #include "mainwindow.h"
 #include "deviceframe.h"
+#include "device.h"
 #include "constants.h"
 #include "org.freedesktop.DBus.ObjectManager.h"
 #include "adapter.h"
@@ -67,8 +68,8 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::paintEvent(QPaintEvent* paintEvent) {
-	int knownDevices = widget.knownDevicesFrame->layout()->count() - 1;
-	int otherDevices = widget.otherDevicesFrame->layout()->count() - 1;	
+	int knownDevices = widget.knownDevicesBox->layout()->count() - 1;
+	int otherDevices = widget.otherDevicesBox->layout()->count() - 1;	
 	widget.noKnownLabel->setVisible(knownDevices <= 0);
 	widget.noOtherLabel->setVisible(otherDevices <= 0);
 	QMainWindow::paintEvent(paintEvent);
@@ -84,29 +85,35 @@ void MainWindow::onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap int
 
 void MainWindow::onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces)
 {
-	if (interfaces.contains(DEVICE1_IF) && frames.contains(path.path())) {
-		frames.take(path.path())->deleteLater();
+	if (interfaces.contains(DEVICE1_IF)) {
+		remove(path);	
 	}
 }
 
 void MainWindow::add(const QDBusObjectPath& objectPath)
 {
+	remove(objectPath);
+
 	QString path = objectPath.path();
 
-	if (frames.contains(path)) {
-		return;
-	}
-
-	DeviceFrame* frame = frames[path] = new DeviceFrame(path);
-	connect(frame, SIGNAL(pairingChanged(DeviceFrame*, bool)), SLOT(onPairingChanged(DeviceFrame*, bool)));
-	connect(frame, SIGNAL(clicked(DeviceFrame*)), SIGNAL(frameClicked(DeviceFrame*)));
-	connect(this, SIGNAL(frameClicked(DeviceFrame*)), frame, SLOT(onDeviceFrameClicked(DeviceFrame*)));
-
-	if (frame->paired()) {
-		widget.knownDevicesFrame->layout()->addWidget(frame);
+	DeviceFrame* frame = new DeviceFrame(path);
+	if (frame->device->paired()) {
+		knownDevices[path] = frame;
+		widget.knownDevicesBox->layout()->addWidget(frame);
 	}
 	else {
-		widget.otherDevicesFrame->layout()->addWidget(frame);
+		otherDevices[path] = frame;
+		widget.otherDevicesBox->layout()->addWidget(frame);
 	}
+}
 
+void MainWindow::remove(const QDBusObjectPath& objectPath)
+{
+	if (knownDevices.contains(objectPath.path())) {
+		knownDevices.take(objectPath.path())->deleteLater();
+	}
+		
+	if (otherDevices.contains(objectPath.path())) {
+		otherDevices.take(objectPath.path())->deleteLater();
+	}
 }
