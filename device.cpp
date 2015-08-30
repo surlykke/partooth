@@ -5,32 +5,124 @@
  * Created on 15. august 2015, 09:56
  */
 
+#include <QWidget>
+#include <QBoxLayout>
+#include <qt/QtWidgets/qmessagebox.h>
+
 #include "device.h"
 #include "constants.h"
+#include "org.bluez.Adapter1.h"
+	
+const QMap<QString, QString> Device::uuid2ServiceName = {}; // FIXME
 
-Device::Device(QString path, QObject* parent) :	
-	OrgBluezDevice1Interface(BLUEZ_SERVICE, path, SYS_BUS),
+QString Device::serviceName(QString uuid)
+{
+	return uuid2ServiceName.value(uuid, uuid);
+}
+
+Device::Device(QString path, QWidget* parent) :
+	QFrame(parent),
+	deviceInterface(new OrgBluezDevice1Interface(BLUEZ_SERVICE, path, SYS_BUS, this)),
 	propertiesInterface(new OrgFreedesktopDBusPropertiesInterface(BLUEZ_SERVICE, path, SYS_BUS, this))
 {
-	qDebug() << "Device created";
-	showServices();
+	frame.setupUi(this);
+	frame.detailsFrame->hide();
+	update();
+
+	connect(frame.deviceButton, SIGNAL(clicked()), SIGNAL(clicked()));
+	connect(frame.forgetButton, SIGNAL(clicked()), SLOT(forget()));
+	connect(frame.pairButton, SIGNAL(clicked()), SLOT(pair()));
+
 	connect(propertiesInterface,
 		    SIGNAL(PropertiesChanged(const QString&, const QVariantMap&, const QStringList&)),
 			SLOT(onPropertiesChanged(const QString&, const QVariantMap&, const QStringList&)));
+
 }
 
 Device::~Device()
 {
 }
 
-void Device::onPropertiesChanged(const QString& interface, const QVariantMap& changed_properties, const QStringList& invalidated_properties)
-{
-	qDebug() << "PropertiesChanged, changed_properties:" << changed_properties << "\n"
-	         << "invalidated_properties:" << invalidated_properties;
-	showServices();
-	emit propertiesChanged(path());
+void Device::showDetails(bool show) {
+	if (show) {
+		frame.detailsFrame->show();
+		setStyleSheet(
+			"QFrame#device {"
+			"	border-style: outset;"
+			"	border-width: 2px;"
+			"	border-radius: 10px;"
+			"	border-color: black;"
+			"}"
+		);
+	}
+	else {
+		frame.detailsFrame->hide();
+		setStyleSheet("#device {}");
+	}
 }
 
-void Device::showServices()
+void Device::paintEvent(QPaintEvent* event)
 {
+	frame.noServicesLabel->setVisible(services.isEmpty());
+	QFrame::paintEvent(event);
+}
+
+
+
+void Device::onPropertiesChanged(const QString& interface, const QVariantMap& changed_properties, const QStringList& invalidated_properties)
+{
+	update();
+	if (changed_properties.contains("Paired") && changed_properties["Paired"].toBool()) {
+		emit paired(deviceInterface->path());
+	}
+}
+
+void Device::pair()
+{
+	if (QMessageBox::question(this, tr("Pair"), tr("Pair with %1?").arg(deviceInterface->alias())) == QMessageBox::Yes) {
+		QDBusPendingReply<> reply = deviceInterface->Pair();
+		if (reply.isError()) {
+			qDebug() << reply.error().message(); // FIXME do more
+		}
+		deviceInterface->setTrusted(true);
+		reply = deviceInterface->Connect();
+		if (reply.isError()) {
+			qDebug() << reply.error().message();
+		}
+	}	
+}
+
+void Device::forget()
+{
+	if (QMessageBox::question(this, tr("Forget"), tr("Forget %1?").arg(deviceInterface->alias())) == QMessageBox::Yes) {
+		QDBusPendingReply<> reply = OrgBluezAdapter1Interface(BLUEZ_SERVICE, deviceInterface->adapter().path(), SYS_BUS).RemoveDevice(QDBusObjectPath(deviceInterface->path()));
+		if (reply.isError()) {
+			qDebug() << reply.error().message();
+		}
+	}	
+}
+
+
+void Device::update()
+{
+	frame.iconLabel->setPixmap(QIcon::fromTheme(deviceInterface->icon()).pixmap(40, 40));
+	frame.aliasLabel->setText(deviceInterface->alias());
+	frame.trustedCheckBox->setChecked(deviceInterface->trusted());
+	frame.trustedCheckBox->setVisible(deviceInterface->paired());
+	frame.connectedCheckBox->setChecked(deviceInterface->connected());
+	frame.connectedCheckBox->setVisible(deviceInterface->paired());
+	frame.forgetButton->setVisible(deviceInterface->paired());
+	frame.pairButton->setVisible(! deviceInterface->paired());
+
+	// Adjust list of services brute force
+	while (! services.isEmpty()) {
+		services.takeFirst()->deleteLater();
+	}
+
+	for (QString uuid : deviceInterface->uUIDs()) {
+		services.append(new QLabel(serviceName(uuid)));
+		frame.servicesFrame->layout()->addWidget(services.last());
+	}
+
+
 }

@@ -15,7 +15,6 @@
 #include "ui_mainwindow.h"
 
 class Device;
-class DeviceFrame;
 
 class MainWindow : public QMainWindow
 {
@@ -31,14 +30,16 @@ protected:
 private slots:
 	void onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces);
 	void onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces);
+	void onDeviceClicked();
+	void onDevicePaired(QString path); 
 
 private:
-	void add(const QDBusObjectPath& objectPath);
-	void remove(const QDBusObjectPath& objectPath);
+	void add(const QString& path, bool paired);
+	void remove(const QString& path);
 
 	Ui::mainwindow widget;
-	QMap<QString, DeviceFrame*> knownDevices;	
-	QMap<QString, DeviceFrame*> otherDevices;
+	QVBoxLayout* devicesLayout;
+	QMap<QString, Device*> devices;	
 };
 
 #endif	/* _MAINWINDOW_H */

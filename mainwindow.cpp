@@ -7,7 +7,6 @@
  */
 
 #include "mainwindow.h"
-#include "deviceframe.h"
 #include "device.h"
 #include "constants.h"
 #include "org.freedesktop.DBus.ObjectManager.h"
@@ -16,6 +15,7 @@
 MainWindow::MainWindow()
 {
 	widget.setupUi(this);
+	devicesLayout = dynamic_cast<QVBoxLayout*>(widget.devicesFrame->layout());
 
 	qDBusRegisterMetaType<PropertyMap>();
 	qDBusRegisterMetaType<InterfaceMap>();
@@ -57,7 +57,8 @@ MainWindow::MainWindow()
 	for (QDBusObjectPath path : objectMap.keys()) {
 		InterfaceMap interfaceMap = objectMap[path];
 		if (interfaceMap.contains(DEVICE1_IF)) {
-			add(path);
+			bool paired = interfaceMap[DEVICE1_IF]["Paired"].toBool();
+			add(path.path(), paired);
 		}
 	}
 
@@ -68,10 +69,11 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::paintEvent(QPaintEvent* paintEvent) {
-	int knownDevices = widget.knownDevicesBox->layout()->count() - 1;
-	int otherDevices = widget.otherDevicesBox->layout()->count() - 1;	
-	widget.noKnownLabel->setVisible(knownDevices <= 0);
-	widget.noOtherLabel->setVisible(otherDevices <= 0);
+	int knownDevicesIndex = 0; // Always
+	int otherDevicesIndex = devicesLayout->indexOf(widget.otherDevicesLabel);
+	int count = devicesLayout->layout()->count();
+	widget.noKnownLabel->setVisible(otherDevicesIndex <= knownDevicesIndex + 2);
+	widget.noOtherLabel->setVisible(otherDevicesIndex >= count - 1);
 	QMainWindow::paintEvent(paintEvent);
 }
 
@@ -79,41 +81,59 @@ void MainWindow::paintEvent(QPaintEvent* paintEvent) {
 void MainWindow::onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces)
 {
 	if (interfaces.contains(DEVICE1_IF)) {
-		add(path);	
+		bool paired = interfaces[DEVICE1_IF]["Paired"].toBool();
+		add(path.path(), paired);	
 	}
 }
 
 void MainWindow::onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces)
 {
 	if (interfaces.contains(DEVICE1_IF)) {
-		remove(path);	
+		remove(path.path());	
 	}
 }
 
-void MainWindow::add(const QDBusObjectPath& objectPath)
+void MainWindow::onDeviceClicked()
 {
-	remove(objectPath);
-
-	QString path = objectPath.path();
-
-	DeviceFrame* frame = new DeviceFrame(path);
-	if (frame->device->paired()) {
-		knownDevices[path] = frame;
-		widget.knownDevicesBox->layout()->addWidget(frame);
-	}
-	else {
-		otherDevices[path] = frame;
-		widget.otherDevicesBox->layout()->addWidget(frame);
+	Device* clickedDevice = dynamic_cast<Device*>(sender());
+	for (Device* device : devices.values()) {
+		if (device == clickedDevice) {
+			device->showDetails(! device->shown());
+		}
+		else {
+			device->showDetails(false);
+		}
 	}
 }
 
-void MainWindow::remove(const QDBusObjectPath& objectPath)
+void MainWindow::onDevicePaired(QString path)
 {
-	if (knownDevices.contains(objectPath.path())) {
-		knownDevices.take(objectPath.path())->deleteLater();
+	if (devices.contains(path)) {
+		Device* device = devices[path];
+		devicesLayout->removeWidget(device);
+		int index = devicesLayout->indexOf(widget.otherDevicesLabel);
+		devicesLayout->insertWidget(index, device);
 	}
-		
-	if (otherDevices.contains(objectPath.path())) {
-		otherDevices.take(objectPath.path())->deleteLater();
+}
+
+
+void MainWindow::add(const QString& path, bool paired)
+{
+	remove(path);
+
+	devices[path] = new Device(path, this);
+	connect(devices[path], SIGNAL(clicked()), SLOT(onDeviceClicked()));
+	connect(devices[path], SIGNAL(paired(QString)), SLOT(onDevicePaired(QString)));
+	int index = paired ? devicesLayout->indexOf(widget.otherDevicesLabel) : -1;
+	devicesLayout->insertWidget(index, devices[path]);
+}
+
+void MainWindow::remove(const QString& path)
+{
+	if (devices.contains(path)) {
+		Device* device = devices.take(path);
+		qDebug() << "Deleting:" << path;
+		device->deleteLater();
 	}
+	
 }

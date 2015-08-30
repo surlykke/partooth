@@ -9,28 +9,51 @@
 #define	DEVICE_H
 
 #include <QObject>
+#include <QFrame>
 
 #include "org.bluez.Device1.h"
 #include "org.freedesktop.DBus.Properties.h"
+#include "ui_device.h"
 
-
-class Device : public OrgBluezDevice1Interface
+class Device : public QFrame
 {
 	Q_OBJECT
 
 public:
-	Device(QString path, QObject* parent = 0);
+	static QString serviceName(QString uuid);
+
+	Device(QString path, QWidget* parent = 0);
 	virtual ~Device();
-	OrgFreedesktopDBusPropertiesInterface* propertiesInterface;
+	void showDetails(bool show);
+	inline bool shown() { return frame.detailsFrame->isVisible(); }
 
 signals:
-	void propertiesChanged(QString path);
+	void clicked();
+	void paired(QString path);
+
+protected:	
+	virtual void paintEvent(QPaintEvent* event);
+
 
 private slots:
-	void onPropertiesChanged(const QString &interface, const QVariantMap &changed_properties, const QStringList &invalidated_properties);
+	void onPropertiesChanged(const QString &interface, 
+							 const QVariantMap &changed_properties, 
+							 const QStringList &invalidated_properties);
+	void pair();
+	void forget();
 
-	void showServices();
+private:
+	static const QMap<QString, QString> uuid2ServiceName;
+
+	void update();
+	OrgBluezDevice1Interface* deviceInterface;
+	OrgFreedesktopDBusPropertiesInterface* propertiesInterface;
+
+	Ui::device frame;
+	QList<QLabel*> services;	
 };
+
+
 
 #endif	/* DEVICE_H */
 
