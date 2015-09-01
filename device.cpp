@@ -8,6 +8,7 @@
 #include <QWidget>
 #include <QBoxLayout>
 #include <qt/QtWidgets/qmessagebox.h>
+#include <qt/QtDBus/qdbuspendingcall.h>
 
 #include "device.h"
 #include "constants.h"
@@ -23,15 +24,18 @@ QString Device::serviceName(QString uuid)
 Device::Device(QString path, QWidget* parent) :
 	QFrame(parent),
 	deviceInterface(new OrgBluezDevice1Interface(BLUEZ_SERVICE, path, SYS_BUS, this)),
-	propertiesInterface(new OrgFreedesktopDBusPropertiesInterface(BLUEZ_SERVICE, path, SYS_BUS, this))
+	propertiesInterface(new OrgFreedesktopDBusPropertiesInterface(BLUEZ_SERVICE, path, SYS_BUS, this)),
+	pairing(false)
 {
 	frame.setupUi(this);
 	frame.detailsFrame->hide();
 	update();
-
+	
 	connect(frame.deviceButton, SIGNAL(clicked()), SIGNAL(clicked()));
 	connect(frame.forgetButton, SIGNAL(clicked()), SLOT(forget()));
 	connect(frame.pairButton, SIGNAL(clicked()), SLOT(pair()));
+	connect(frame.trustedCheckBox, SIGNAL(stateChanged(int)), SLOT(trustedClicked(int)));
+	connect(frame.connectedCheckBox, SIGNAL(stateChanged(int)), SLOT(connectedClicked(int)));
 
 	connect(propertiesInterface,
 		    SIGNAL(PropertiesChanged(const QString&, const QVariantMap&, const QStringList&)),
@@ -81,16 +85,27 @@ void Device::pair()
 {
 	if (QMessageBox::question(this, tr("Pair"), tr("Pair with %1?").arg(deviceInterface->alias())) == QMessageBox::Yes) {
 		QDBusPendingReply<> reply = deviceInterface->Pair();
-		if (reply.isError()) {
-			qDebug() << reply.error().message(); // FIXME do more
-		}
-		deviceInterface->setTrusted(true);
-		reply = deviceInterface->Connect();
-		if (reply.isError()) {
-			qDebug() << reply.error().message();
-		}
+		QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(reply, this);
+		connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)), SLOT(pairingFinished(QDBusPendingCallWatcher*)));  
+		pairing = true;
+		update();
 	}	
 }
+
+void Device::pairingFinished(QDBusPendingCallWatcher* reply)
+{
+	pairing = false;
+	if (reply->isError()) {
+		qWarning() << reply->error().message();
+	}
+	else {
+		deviceInterface->setTrusted(true);
+		deviceInterface->Connect();
+	}
+	reply->deleteLater();
+	update();
+}
+
 
 void Device::forget()
 {
@@ -102,6 +117,27 @@ void Device::forget()
 	}	
 }
 
+void Device::connectedClicked(int newState)
+{
+	if (newState == Qt::Unchecked) {
+		deviceInterface->Disconnect();
+	}
+	else if (newState == Qt::Checked) {
+		deviceInterface->Connect();
+	}
+}
+
+
+void Device::trustedClicked(int newState)
+{
+	if (newState == Qt::Unchecked)	{
+		deviceInterface->setTrusted(false);
+	}
+	else if (newState == Qt::Checked) {
+		deviceInterface->setTrusted(true);
+	} 
+}
+
 
 void Device::update()
 {
@@ -111,8 +147,9 @@ void Device::update()
 	frame.trustedCheckBox->setVisible(deviceInterface->paired());
 	frame.connectedCheckBox->setChecked(deviceInterface->connected());
 	frame.connectedCheckBox->setVisible(deviceInterface->paired());
-	frame.forgetButton->setVisible(deviceInterface->paired());
-	frame.pairButton->setVisible(! deviceInterface->paired());
+	frame.forgetFrame->setVisible(deviceInterface->paired());
+	frame.pairFrame->setVisible(!pairing && !deviceInterface->paired());
+	frame.pairingFrame->setVisible(pairing && !deviceInterface->paired());
 
 	// Adjust list of services brute force
 	while (! services.isEmpty()) {
@@ -123,6 +160,4 @@ void Device::update()
 		services.append(new QLabel(serviceName(uuid)));
 		frame.servicesFrame->layout()->addWidget(services.last());
 	}
-
-
 }

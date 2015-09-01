@@ -40,7 +40,10 @@ private slots:
 							 const QVariantMap &changed_properties, 
 							 const QStringList &invalidated_properties);
 	void pair();
+	void pairingFinished(QDBusPendingCallWatcher* watcher);
 	void forget();
+	void trustedClicked(int newState);
+	void connectedClicked(int newState);
 
 private:
 	static const QMap<QString, QString> uuid2ServiceName;
@@ -50,7 +53,8 @@ private:
 	OrgFreedesktopDBusPropertiesInterface* propertiesInterface;
 
 	Ui::device frame;
-	QList<QLabel*> services;	
+	QList<QLabel*> services;
+	bool pairing;
 };
 
 
