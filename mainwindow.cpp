@@ -14,8 +14,10 @@
 
 MainWindow::MainWindow()
 {
-	widget.setupUi(this);
-	devicesLayout = dynamic_cast<QVBoxLayout*>(widget.devicesFrame->layout());
+    widget.setupUi(this);
+    adaptersLayout = dynamic_cast<QVBoxLayout*>(widget.adaptersFrame->layout());
+    knownDevicesLayout = dynamic_cast<QVBoxLayout*>(widget.knownDevicesFrame->layout());
+    otherDevicesLayout = dynamic_cast<QVBoxLayout*>(widget.otherDevicesFrame->layout());
 
 	qDBusRegisterMetaType<PropertyMap>();
 	qDBusRegisterMetaType<InterfaceMap>();
@@ -39,18 +41,17 @@ MainWindow::MainWindow()
 	ObjectMap objectMap = objectManager->GetManagedObjects();
 
 	// Find adapters, turn them on, make them scan
-	for (QDBusObjectPath path: objectMap.keys()) {
-		InterfaceMap interfaceMap = objectMap[path];
-		if (interfaceMap.contains(ADAPTER1_IF) && interfaceMap.contains(PROPS_IF)) {
-			Adapter adapter(path.path());
-			adapter.setPowered(true);
-			if (adapter.powered()) {
-				adapter.StartDiscovery();
-			}
-			else {
-				qWarning() << "Unable to turn on adapter" << adapter.name();
-			}
-		}
+    for (QDBusObjectPath objectPath: objectMap.keys()) {
+        InterfaceMap interfaceMap = objectMap[objectPath];
+        if (interfaceMap.contains(ADAPTER1_IF) &&
+            interfaceMap.contains(PROPS_IF) &&
+            !adapters.contains(objectPath.path()))
+        {
+            QString path = objectPath.path();
+            adapters[path] = new Adapter(path);
+            adapters[path]->initialize();
+            adaptersLayout->addWidget(adapters[path]);
+        }
 	}
 
 	// Find all devices and add them
@@ -69,11 +70,9 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::paintEvent(QPaintEvent* paintEvent) {
-	int knownDevicesIndex = 0; // Always
-	int otherDevicesIndex = devicesLayout->indexOf(widget.otherDevicesLabel);
-	int count = devicesLayout->layout()->count();
-	widget.noKnownLabel->setVisible(otherDevicesIndex <= knownDevicesIndex + 2);
-	widget.noOtherLabel->setVisible(otherDevicesIndex >= count - 1);
+    widget.noAdaptersLabel->setVisible(adaptersLayout->count() <= 1);
+    widget.noKnownLabel->setVisible(knownDevicesLayout->count() <= 1);
+    widget.noOtherLabel->setVisible(otherDevicesLayout->count() <= 1);
 	QMainWindow::paintEvent(paintEvent);
 }
 
@@ -110,9 +109,8 @@ void MainWindow::onDevicePaired(QString path)
 {
 	if (devices.contains(path)) {
 		Device* device = devices[path];
-		devicesLayout->removeWidget(device);
-		int index = devicesLayout->indexOf(widget.otherDevicesLabel);
-		devicesLayout->insertWidget(index, device);
+        otherDevicesLayout->removeWidget(device);
+        knownDevicesLayout->addWidget(device);
 	}
 }
 
@@ -124,8 +122,12 @@ void MainWindow::add(const QString& path, bool paired)
 	devices[path] = new Device(path, this);
 	connect(devices[path], SIGNAL(clicked()), SLOT(onDeviceClicked()));
 	connect(devices[path], SIGNAL(paired(QString)), SLOT(onDevicePaired(QString)));
-	int index = paired ? devicesLayout->indexOf(widget.otherDevicesLabel) : -1;
-	devicesLayout->insertWidget(index, devices[path]);
+    if (paired) {
+        knownDevicesLayout->addWidget(devices[path]);
+    }
+    else {
+        otherDevicesLayout->addWidget(devices[path]);
+    }
 }
 
 void MainWindow::remove(const QString& path)

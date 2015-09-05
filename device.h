@@ -20,7 +20,8 @@ class Device : public QFrame
 	Q_OBJECT
 
 public:
-	static QString serviceName(QString uuid);
+    static QString serviceName(QString uuid);
+    static QMap<QString, Device*> devices;
 
 	Device(QString path, QWidget* parent = 0);
 	virtual ~Device();
@@ -32,7 +33,7 @@ signals:
 	void paired(QString path);
 
 protected:	
-	virtual void paintEvent(QPaintEvent* event);
+    virtual void paintEvent(QPaintEvent* event);
 
 
 private slots:

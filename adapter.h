@@ -1,25 +1,28 @@
-/* 
- * File:   adapter.h
- * Author: christian
- *
- * Created on 15. august 2015, 10:01
- */
-
 #ifndef ADAPTER_H
-#define	ADAPTER_H
+#define ADAPTER_H
 
+#include <QFrame>
 #include "org.bluez.Adapter1.h"
-#include "org.freedesktop.DBus.Properties.h"
 
+namespace Ui {
+class Adapter;
 
-class Adapter : public OrgBluezAdapter1Interface
+}
+
+class Adapter : public QFrame
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit Adapter(QString path, QObject* parent = 0);
-	virtual ~Adapter();
+
+    explicit Adapter(QString path, QWidget *parent = 0);
+    ~Adapter();
+
+    void initialize();
+
+private:
+    OrgBluezAdapter1Interface adapterInterface;
+    Ui::Adapter *ui;
 };
 
-#endif	/* ADAPTER_H */
-
+#endif // ADAPTER_H

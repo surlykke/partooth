@@ -15,6 +15,7 @@
 #include "ui_mainwindow.h"
 
 class Device;
+class Adapter;
 
 class MainWindow : public QMainWindow
 {
@@ -38,8 +39,12 @@ private:
 	void remove(const QString& path);
 
 	Ui::mainwindow widget;
-	QVBoxLayout* devicesLayout;
-	QMap<QString, Device*> devices;	
+    QVBoxLayout* adaptersLayout;
+    QVBoxLayout* knownDevicesLayout;
+    QVBoxLayout* otherDevicesLayout;
+
+    QMap<QString, Adapter*> adapters;
+    QMap<QString, Device*> devices;
 };
 
 #endif	/* _MAINWINDOW_H */
