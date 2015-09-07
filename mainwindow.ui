@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>536</width>
-    <height>542</height>
+    <height>557</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,12 +16,25 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QScrollArea" name="scrollArea">
+     <widget class="QLabel" name="messageLabel">
+      <property name="text">
+       <string>Message</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QScrollArea" name="objectArea">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
       </property>
       <property name="widgetResizable">
        <bool>true</bool>
@@ -31,8 +44,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>504</width>
-         <height>510</height>
+         <width>506</width>
+         <height>445</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -72,37 +85,8 @@
             <number>0</number>
            </property>
            <property name="bottomMargin">
-            <number>5</number>
+            <number>10</number>
            </property>
-           <item>
-            <widget class="QLabel" name="noAdaptersLabel">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-               <italic>true</italic>
-              </font>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">color: darkgrey;
-</string>
-             </property>
-             <property name="text">
-              <string>No bluetooth adapter found</string>
-             </property>
-             <property name="textFormat">
-              <enum>Qt::RichText</enum>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-             </property>
-             <property name="margin">
-              <number>0</number>
-             </property>
-             <property name="indent">
-              <number>45</number>
-             </property>
-            </widget>
-           </item>
           </layout>
          </widget>
         </item>
@@ -142,7 +126,7 @@
             <number>0</number>
            </property>
            <property name="bottomMargin">
-            <number>5</number>
+            <number>10</number>
            </property>
            <item>
             <widget class="QLabel" name="noKnownLabel">

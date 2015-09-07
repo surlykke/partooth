@@ -27,6 +27,7 @@ public:
 	virtual ~Device();
 	void showDetails(bool show);
 	inline bool shown() { return frame.detailsFrame->isVisible(); }
+    OrgBluezDevice1Interface* deviceInterface;
 
 signals:
 	void clicked();
@@ -37,20 +38,19 @@ protected:
 
 
 private slots:
-	void onPropertiesChanged(const QString &interface, 
-							 const QVariantMap &changed_properties, 
-							 const QStringList &invalidated_properties);
-	void pair();
-	void pairingFinished(QDBusPendingCallWatcher* watcher);
-	void forget();
-	void trustedClicked(int newState);
-	void connectedClicked(int newState);
+    void onPropertiesChanged(const QString &interface,
+                             const QVariantMap &changed_properties,
+                             const QStringList &invalidated_properties);
+    void pair();
+    void pairingFinished(QDBusPendingCallWatcher* watcher);
+    void forget();
+    void trustedClicked(int newState);
+    void connectedClicked(int newState);
 
 private:
 	static const QMap<QString, QString> uuid2ServiceName;
 
 	void update();
-	OrgBluezDevice1Interface* deviceInterface;
 	OrgFreedesktopDBusPropertiesInterface* propertiesInterface;
 
 	Ui::device frame;

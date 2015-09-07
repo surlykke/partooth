@@ -27,20 +27,20 @@ MainWindow::MainWindow()
 	OrgFreedesktopDBusObjectManagerInterface* objectManager = 
 		new OrgFreedesktopDBusObjectManagerInterface(BLUEZ_SERVICE, "/", SYS_BUS);
 
-	qDebug() << "Connecting interfaces added";
 	connect(objectManager, 
 		    SIGNAL(InterfacesAdded(const QDBusObjectPath&, InterfaceMap)),
 		    SLOT(onInterfacesAdded(const QDBusObjectPath&, InterfaceMap)));
 
-	qDebug() << "Connecting interfaces removed";
 	connect(objectManager, 
 		    SIGNAL(InterfacesRemoved(const QDBusObjectPath&, const QStringList&)),
 		    SLOT(onInterfacesRemoved(const QDBusObjectPath&, const QStringList&)));
 
-		
+    connect(&rfkill, SIGNAL(changed()), SLOT(updateErrorMessage()));
+    rfkill.startMonitoring();
+
 	ObjectMap objectMap = objectManager->GetManagedObjects();
 
-	// Find adapters, turn them on, make them scan
+    // Find all adapters
     for (QDBusObjectPath objectPath: objectMap.keys()) {
         InterfaceMap interfaceMap = objectMap[objectPath];
         if (interfaceMap.contains(ADAPTER1_IF) &&
@@ -49,7 +49,6 @@ MainWindow::MainWindow()
         {
             QString path = objectPath.path();
             adapters[path] = new Adapter(path);
-            adapters[path]->initialize();
             adaptersLayout->addWidget(adapters[path]);
         }
 	}
@@ -59,7 +58,7 @@ MainWindow::MainWindow()
 		InterfaceMap interfaceMap = objectMap[path];
 		if (interfaceMap.contains(DEVICE1_IF)) {
 			bool paired = interfaceMap[DEVICE1_IF]["Paired"].toBool();
-			add(path.path(), paired);
+            addDevice(path.path(), paired);
 		}
 	}
 
@@ -69,27 +68,65 @@ MainWindow::~MainWindow()
 {
 }
 
-void MainWindow::paintEvent(QPaintEvent* paintEvent) {
-    widget.noAdaptersLabel->setVisible(adaptersLayout->count() <= 1);
-    widget.noKnownLabel->setVisible(knownDevicesLayout->count() <= 1);
-    widget.noOtherLabel->setVisible(otherDevicesLayout->count() <= 1);
-	QMainWindow::paintEvent(paintEvent);
+void MainWindow::updateErrorMessage()
+{
+    if (adapters.isEmpty()) {
+        widget.messageLabel->setText(tr("No bluetooth adapter found"));
+        widget.messageLabel->show();
+        widget.objectArea->hide();
+    }
+    else if (rfkill.hardBlocked) {
+        widget.messageLabel->setText(tr("Bluetooth is hard-blocked.<br/>Please unblock it."));
+        widget.messageLabel->show();
+        widget.objectArea->hide();
+
+    }
+    else if (rfkill.softBlocked) {
+        widget.messageLabel->setText(tr("Bluetooth is soft-blocked.<br/>Please unblock it."));
+        widget.messageLabel->show();
+        widget.objectArea->hide();
+    }
+    else {
+        widget.messageLabel->hide();
+        widget.objectArea->show();
+    }
 }
 
 
-void MainWindow::onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces)
+void MainWindow::onInterfacesAdded(const QDBusObjectPath& objectPath, InterfaceMap interfaces)
 {
-	if (interfaces.contains(DEVICE1_IF)) {
+    qDebug() << "Interfaces added:" << objectPath.path() << "->" << interfaces.keys();
+    QString path = objectPath.path();
+
+    if (interfaces.contains(DEVICE1_IF) && !devices.contains(path)) {
 		bool paired = interfaces[DEVICE1_IF]["Paired"].toBool();
-		add(path.path(), paired);	
-	}
+        addDevice(path, paired);
+    }
+
+    if (interfaces.contains(ADAPTER1_IF) && !adapters.contains(path)) {
+        Adapter* adapter = new Adapter(objectPath.path(), this);
+        adapters[objectPath.path()] = adapter;
+        adaptersLayout->addWidget(adapter);
+        updateErrorMessage();
+    }
+
 }
 
-void MainWindow::onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces)
+void MainWindow::onInterfacesRemoved(const QDBusObjectPath& objectPath, const QStringList& interfaces)
 {
-	if (interfaces.contains(DEVICE1_IF)) {
-		remove(path.path());	
-	}
+    qDebug() << "Interfaces removed:" << objectPath.path() << interfaces;
+    QString path = objectPath.path();
+
+    if (interfaces.contains(DEVICE1_IF) && devices.contains(path)) {
+        removeDevice(objectPath.path());
+    }
+
+    if (interfaces.contains(ADAPTER1_IF) && adapters.contains(path)) {
+        Adapter* adapter = adapters.take(path);
+        adaptersLayout->removeWidget(adapter);
+        adapter->deleteLater();
+        updateErrorMessage();
+    }
 }
 
 void MainWindow::onDeviceClicked()
@@ -115,27 +152,33 @@ void MainWindow::onDevicePaired(QString path)
 }
 
 
-void MainWindow::add(const QString& path, bool paired)
+void MainWindow::addDevice(const QString& path, bool paired)
 {
-	remove(path);
+    removeDevice(path);
 
-	devices[path] = new Device(path, this);
-	connect(devices[path], SIGNAL(clicked()), SLOT(onDeviceClicked()));
-	connect(devices[path], SIGNAL(paired(QString)), SLOT(onDevicePaired(QString)));
-    if (paired) {
-        knownDevicesLayout->addWidget(devices[path]);
-    }
-    else {
-        otherDevicesLayout->addWidget(devices[path]);
-    }
+    Device* dev = new Device(path, this);
+    Adapter* adapter = adapters[dev->deviceInterface->adapter().path()];
+    dev->setEnabled(adapter->adapterInterface.powered());
+    connect(adapter, SIGNAL(powered(bool)), dev, SLOT(setEnabled(bool)));
+    connect(dev, SIGNAL(clicked()), SLOT(onDeviceClicked()));
+    connect(dev, SIGNAL(paired(QString)), SLOT(onDevicePaired(QString)));
+    devices[path] = dev;
+    (dev->deviceInterface->paired() ? knownDevicesLayout : otherDevicesLayout)->
+            addWidget(dev);
+
+    widget.noKnownLabel->setVisible(knownDevicesLayout->count() <= 1);
+    widget.noOtherLabel->setVisible(otherDevicesLayout->count() <= 1);
 }
 
-void MainWindow::remove(const QString& path)
+void MainWindow::removeDevice(const QString& path)
 {
 	if (devices.contains(path)) {
 		Device* device = devices.take(path);
-		qDebug() << "Deleting:" << path;
-		device->deleteLater();
+        knownDevicesLayout->removeWidget(device);
+        otherDevicesLayout->removeWidget(device);
+        device->deleteLater();
 	}
 	
+    widget.noKnownLabel->setVisible(knownDevicesLayout->count() <= 1);
+    widget.noOtherLabel->setVisible(otherDevicesLayout->count() <= 1);
 }

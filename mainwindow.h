@@ -12,6 +12,7 @@
 #include <QDBusObjectPath>
 
 #include "dbus_types.h"
+#include "rfkill.h"
 #include "ui_mainwindow.h"
 
 class Device;
@@ -25,23 +26,23 @@ public:
 	MainWindow();
 	virtual ~MainWindow();
 
-protected:
-	virtual void paintEvent(QPaintEvent* paintEvent);
-
 private slots:
-	void onInterfacesAdded(const QDBusObjectPath& path, InterfaceMap interfaces);
-	void onInterfacesRemoved(const QDBusObjectPath& path, const QStringList& interfaces);
+    void updateErrorMessage();
+    void onInterfacesAdded(const QDBusObjectPath& objectPath, InterfaceMap interfaces);
+    void onInterfacesRemoved(const QDBusObjectPath& objectPath, const QStringList& interfaces);
 	void onDeviceClicked();
 	void onDevicePaired(QString path); 
 
 private:
-	void add(const QString& path, bool paired);
-	void remove(const QString& path);
+    void addDevice(const QString& path, bool paired);
+    void removeDevice(const QString& path);
 
 	Ui::mainwindow widget;
     QVBoxLayout* adaptersLayout;
     QVBoxLayout* knownDevicesLayout;
     QVBoxLayout* otherDevicesLayout;
+
+    Rfkill rfkill;
 
     QMap<QString, Adapter*> adapters;
     QMap<QString, Device*> devices;
