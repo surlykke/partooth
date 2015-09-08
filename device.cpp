@@ -31,17 +31,17 @@ Device::Device(QString path, QWidget* parent) :
 {
 	frame.setupUi(this);
 	frame.detailsFrame->hide();
-	update();
+    update();
 	
-	connect(frame.deviceButton, SIGNAL(clicked()), SIGNAL(clicked()));
+    connect(frame.deviceButton, SIGNAL(clicked()), SIGNAL(clicked()));
 	connect(frame.forgetButton, SIGNAL(clicked()), SLOT(forget()));
 	connect(frame.pairButton, SIGNAL(clicked()), SLOT(pair()));
 	connect(frame.trustedCheckBox, SIGNAL(stateChanged(int)), SLOT(trustedClicked(int)));
-	connect(frame.connectedCheckBox, SIGNAL(stateChanged(int)), SLOT(connectedClicked(int)));
+    connect(frame.connectedCheckBox, SIGNAL(stateChanged(int)), SLOT(connectedClicked(int)));
 
 	connect(propertiesInterface,
-		    SIGNAL(PropertiesChanged(const QString&, const QVariantMap&, const QStringList&)),
-			SLOT(onPropertiesChanged(const QString&, const QVariantMap&, const QStringList&)));
+            SIGNAL(PropertiesChanged(const QString&, const QVariantMap&, const QStringList&)),
+            SLOT(onPropertiesChanged(const QString&, const QVariantMap&, const QStringList&)));
 
 }
 
@@ -50,7 +50,7 @@ Device::~Device()
 }
 
 void Device::showDetails(bool show) {
-	if (show) {
+    if (show) {
 		frame.detailsFrame->show();
 		setStyleSheet(
 			"QFrame#device {"
@@ -58,13 +58,12 @@ void Device::showDetails(bool show) {
 			"	border-width: 2px;"
 			"	border-radius: 10px;"
 			"	border-color: black;"
-			"}"
-		);
-	}
-	else {
+            "}");
+    }
+    else {
 		frame.detailsFrame->hide();
 		setStyleSheet("#device {}");
-	}
+    }
 }
 
 void Device::paintEvent(QPaintEvent* event)
@@ -143,8 +142,9 @@ void Device::trustedClicked(int newState)
 
 void Device::update()
 {
-	frame.iconLabel->setPixmap(QIcon::fromTheme(deviceInterface->icon()).pixmap(40, 40));
-	frame.aliasLabel->setText(deviceInterface->alias());
+    qDebug() << "icon:"	 << deviceInterface->icon();
+    frame.deviceButton->setIcon(QIcon::fromTheme(deviceInterface->icon()));
+    frame.deviceButton->setText(deviceInterface->alias());
 	frame.trustedCheckBox->setChecked(deviceInterface->trusted());
 	frame.trustedCheckBox->setVisible(deviceInterface->paired());
 	frame.connectedCheckBox->setChecked(deviceInterface->connected());
@@ -163,7 +163,7 @@ void Device::update()
         quint32 uuidAsNumber = bluetoothUuid.toUInt32();
         if (uuidAsNumber > 0)  {
             QBluetoothUuid::ServiceClassUuid scUuid =
-                    static_cast<QBluetoothUuid::ServiceClassUuid>(uuidAsNumber);
+                static_cast<QBluetoothUuid::ServiceClassUuid>(uuidAsNumber);
             services.append(new QLabel(QBluetoothUuid::serviceClassToString(scUuid)));
             frame.servicesFrame->layout()->addWidget(services.last());
         }

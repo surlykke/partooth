@@ -10,7 +10,6 @@
 
 Rfkill::Rfkill(QObject *parent) : QObject(parent)
 {
-    qDebug() << "Connect deviceReadyRead";
 }
 
 void Rfkill::startMonitoring()
@@ -34,15 +33,12 @@ void Rfkill::monitorDevRfkill()
         pollfd.events = POLLIN;
         pollfd.fd = fd;
         pollfd.revents = 0;
-        qDebug() << "Polling";
         poll(&pollfd, 1, -1);
 
         struct rfkill_event event;
         int bufsize = sizeof(struct rfkill_event);
 
-        qDebug() << "Reading";
         if (read(fd, &event, bufsize) == bufsize) {
-            qDebug() << "Read";
             if (event.type == RFKILL_TYPE_BLUETOOTH) {
                 hardBlocked = event.hard != 0;
                 softBlocked = event.soft != 0;
