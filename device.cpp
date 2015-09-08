@@ -7,8 +7,10 @@
 
 #include <QWidget>
 #include <QBoxLayout>
-#include <qt/QtWidgets/qmessagebox.h>
-#include <qt/QtDBus/qdbuspendingcall.h>
+#include <QMessageBox>
+#include <QDBusPendingCall>
+#include <QBluetoothUuid>
+#include <QBluetoothServiceInfo>
 
 #include "device.h"
 #include "constants.h"
@@ -156,8 +158,14 @@ void Device::update()
 		services.takeFirst()->deleteLater();
 	}
 
-	for (QString uuid : deviceInterface->uUIDs()) {
-		services.append(new QLabel(serviceName(uuid)));
-		frame.servicesFrame->layout()->addWidget(services.last());
-	}
+    for (QString uuid : deviceInterface->uUIDs()) {
+        QBluetoothUuid bluetoothUuid(uuid);
+        quint32 uuidAsNumber = bluetoothUuid.toUInt32();
+        if (uuidAsNumber > 0)  {
+            QBluetoothUuid::ServiceClassUuid scUuid =
+                    static_cast<QBluetoothUuid::ServiceClassUuid>(uuidAsNumber);
+            services.append(new QLabel(QBluetoothUuid::serviceClassToString(scUuid)));
+            frame.servicesFrame->layout()->addWidget(services.last());
+        }
+    }
 }

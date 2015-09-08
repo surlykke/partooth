@@ -149,6 +149,8 @@ void MainWindow::onDevicePaired(QString path)
         otherDevicesLayout->removeWidget(device);
         knownDevicesLayout->addWidget(device);
 	}
+    widget.noKnownLabel->setVisible(knownDevicesLayout->count() <= 1);
+    widget.noOtherLabel->setVisible(otherDevicesLayout->count() <= 1);
 }
 
 
