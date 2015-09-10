@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Exec=partooth
+Icon=bluetooth
+Terminal=false
+Categories=Application;Qt;Utility
+Name=Partooth
+GenericName=Bluetooth pairing
