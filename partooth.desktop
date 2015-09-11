@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Exec=partooth
-Icon=bluetooth
+Icon=partooth
 Terminal=false
 Categories=Application;Qt;Utility
 Name=Partooth

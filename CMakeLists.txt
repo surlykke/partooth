@@ -37,5 +37,5 @@ target_link_libraries(${PROJECT_NAME}
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin CONFIGURATIONS Release Debug)
 install(FILES   partooth.desktop DESTINATION share/applications CONFIGURATIONS Release Debug)
-install(FILES   bluetooth.svg DESTINATION share/icons/hicolor/scalable/apps CONFIGURATIONS Release Debug)
+install(FILES   partooth.svg DESTINATION share/icons/hicolor/scalable/apps CONFIGURATIONS Release Debug)
 
