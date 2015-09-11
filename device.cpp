@@ -148,7 +148,8 @@ void Device::update()
 	frame.trustedCheckBox->setChecked(deviceInterface->trusted());
 	frame.trustedCheckBox->setVisible(deviceInterface->paired());
 	frame.connectedCheckBox->setChecked(deviceInterface->connected());
-	frame.connectedCheckBox->setVisible(deviceInterface->paired());
+    frame.connectedCheckBox->setVisible(deviceInterface->paired());
+    frame.connectedLabel->setVisible(deviceInterface->paired());
 	frame.forgetFrame->setVisible(deviceInterface->paired());
 	frame.pairFrame->setVisible(!pairing && !deviceInterface->paired());
 	frame.pairingFrame->setVisible(pairing && !deviceInterface->paired());
